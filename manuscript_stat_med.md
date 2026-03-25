@@ -1,9 +1,11 @@
 # RMST Meta: An Open-Access Browser Tool for Meta-Analysis of Restricted Mean Survival Time
 
 ## Authors
-[AUTHOR_NAME_PLACEHOLDER]^1
+Mahmood Ahmad^1
 
-^1 [AFFILIATION_PLACEHOLDER]
+^1 Royal Free Hospital, London, United Kingdom
+
+Correspondence: mahmood.ahmad2@nhs.net | ORCID: 0009-0003-7781-4478
 
 ---
 
