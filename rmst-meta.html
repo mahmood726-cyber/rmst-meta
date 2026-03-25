@@ -212,7 +212,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
 </nav>
 
 <!-- Tab 1: Data Input -->
-<div class="tab-panel active" role="tabpanel" id="panel-data" aria-labelledby="tab-data">
+<div class="tab-panel active" role="tabpanel" id="panel-data" aria-labelledby="tab-data" tabindex="-1">
   <div class="card">
     <div class="flex-between">
       <h3>Study Data</h3>
@@ -264,7 +264,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
 </div>
 
 <!-- Tab 2: Forest Plot -->
-<div class="tab-panel" role="tabpanel" id="panel-forest" aria-labelledby="tab-forest">
+<div class="tab-panel" role="tabpanel" id="panel-forest" aria-labelledby="tab-forest" tabindex="-1">
   <div class="card">
     <div class="flex-between">
       <h3>Forest Plot &mdash; RMST Difference (months)</h3>
@@ -279,7 +279,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
 </div>
 
 <!-- Tab 3: Analysis -->
-<div class="tab-panel" role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis">
+<div class="tab-panel" role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis" tabindex="-1">
   <div id="analysisEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</div>
   <div id="analysisContent" style="display:none;">
     <div class="card">
@@ -313,7 +313,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
     </div>
     <div class="card" id="tauSensCard">
       <h3>Tau-Horizon Sensitivity</h3>
-      <p class="text-sm text-muted mb-1">How pooled RMST difference changes across time horizons (only studies matching each tau)</p>
+      <p class="text-sm text-muted mb-1">How pooled RMST difference changes across time horizons (only studies matching each tau). Results are exploratory; pooling across different horizons requires caution.</p>
       <div id="tauSensResult"></div>
     </div>
     <div class="card">
@@ -334,7 +334,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
 </div>
 
 <!-- Tab 4: Report -->
-<div class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report">
+<div class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report" tabindex="-1">
   <div id="reportEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</div>
   <div id="reportContent" style="display:none;">
     <div class="card">
@@ -421,6 +421,8 @@ function switchTab(target) {
   tabPanels.forEach(function(p) {
     p.classList.toggle('active', p.id === 'panel-' + target);
   });
+  var activePanel = document.getElementById('panel-' + target);
+  if (activePanel) activePanel.focus();
 }
 document.querySelector('.tabs').addEventListener('click', function(e) {
   var btn = e.target.closest('.tab-btn');
@@ -693,6 +695,10 @@ function tQuantile(p, df) {
 function dlMeta(diffs, ses) {
   var k = diffs.length;
   if (k === 0) return null;
+  if (k === 1) {
+    var z975 = normalQuantile(0.975);
+    return { k:1, est:diffs[0], se:ses[0], ci:[diffs[0]-z975*ses[0], diffs[0]+z975*ses[0]], tau2:0, I2:0, Q:0, pQ:1, pi:null, hksj:null, weights:[1], diffs:diffs, ses:ses };
+  }
   var wi = ses.map(function(s) { return 1 / (s * s); });
   var sumW = wi.reduce(function(a, b) { return a + b; }, 0);
   var sumWd = 0;
@@ -790,6 +796,10 @@ function tCDF(x, df) {
 function remlMeta(diffs, ses) {
   var k = diffs.length;
   if (k === 0) return null;
+  if (k === 1) {
+    var z975s = normalQuantile(0.975);
+    return { k:1, est:diffs[0], se:ses[0], ci:[diffs[0]-z975s*ses[0], diffs[0]+z975s*ses[0]], tau2:0, I2:0, Q:0, pQ:1, pi:null, hksj:null, weights:[1/(ses[0]*ses[0])], diffs:diffs, ses:ses, converged:true, iterations:0 };
+  }
 
   // Fixed-effect Q (invariant, same as DL)
   var vi = ses.map(function(s) { return s * s; });
@@ -974,6 +984,15 @@ function leaveOneOut(studies) {
     var subset = studies.filter(function(_, j) { return j !== i; });
     var diffs = subset.map(function(s) { return s.diff; });
     var ses = subset.map(function(s) { return s.seDiff; });
+    if (subset.length < 2) {
+      results.push({
+        omitted: studies[i].name,
+        est: diffs[0],
+        ci: [diffs[0] - normalQuantile(0.975) * ses[0], diffs[0] + normalQuantile(0.975) * ses[0]],
+        I2: 0
+      });
+      continue;
+    }
     var res = remlMeta(diffs, ses);
     if (!res.converged) res = dlMeta(diffs, ses);
     results.push({
@@ -1313,12 +1332,24 @@ function drawFunnelPlot(meta) {
     var lineYMax = eg.intercept * maxSE + eg.slope;
     var lx1 = xS(lineY0), ly1 = yS(0);
     var lx2 = xS(lineYMax), ly2 = yS(maxSE);
-    // Clip to plot area
-    lx1 = Math.max(ml, Math.min(ml + pW, lx1));
-    lx2 = Math.max(ml, Math.min(ml + pW, lx2));
-    lines.push('<line x1="' + lx1 + '" y1="' + ly1 + '" x2="' + lx2 + '" y2="' + ly2 + '" stroke="' + (isDark ? '#f87171' : '#dc3545') + '" stroke-width="1.5" stroke-dasharray="5,3"/>');
-    // Legend
-    lines.push('<text x="' + (ml + pW - 5) + '" y="' + (mt + 14) + '" text-anchor="end" font-size="9" fill="' + (isDark ? '#f87171' : '#dc3545') + '">Egger regression</text>');
+    // Parametric clip to plot area [ml, ml+pW] x [mt, mt+pH]
+    var ox1 = lx1, oy1 = ly1, ox2 = lx2, oy2 = ly2;
+    var dx = ox2 - ox1, dy = oy2 - oy1;
+    var t0 = 0, t1 = 1;
+    function clipEdge(p, q) {
+      if (Math.abs(p) < 1e-10) return q >= 0;
+      var r = q / p;
+      if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; }
+      else { if (r < t0) return false; if (r < t1) t1 = r; }
+      return true;
+    }
+    var visible = clipEdge(-dx, ox1 - ml) && clipEdge(dx, ml + pW - ox1) && clipEdge(-dy, oy1 - mt) && clipEdge(dy, mt + pH - oy1);
+    if (visible) {
+      lx1 = ox1 + t0 * dx; ly1 = oy1 + t0 * dy;
+      lx2 = ox1 + t1 * dx; ly2 = oy1 + t1 * dy;
+      lines.push('<line x1="' + lx1 + '" y1="' + ly1 + '" x2="' + lx2 + '" y2="' + ly2 + '" stroke="' + (isDark ? '#f87171' : '#dc3545') + '" stroke-width="1.5" stroke-dasharray="5,3"/>');
+      lines.push('<text x="' + (ml + pW - 5) + '" y="' + (mt + 14) + '" text-anchor="end" font-size="9" fill="' + (isDark ? '#f87171' : '#dc3545') + '">Egger regression</text>');
+    }
   }
 
   lines.push('</svg>');
@@ -1476,7 +1507,9 @@ function renderReport(meta) {
     'with the standard error of the difference computed as SE<sub>diff</sub> = ' +
     '&radic;(SE<sub>exp</sub><sup>2</sup> + SE<sub>ctrl</sub><sup>2</sup>). ' +
     'Heterogeneity was assessed using the Q statistic and I<sup>2</sup>. A Hartung-Knapp-Sidik-Jonkman ' +
-    '(HKSJ) adjustment was applied for the confidence interval, and a 95% prediction interval was ' +
+    '(HKSJ) adjustment was applied for the confidence interval; the HKSJ variance was floored at the ' +
+    'standard random-effects variance to prevent narrower intervals (R&ouml;ver et al., 2015). ' +
+    'A 95% prediction interval was ' +
     'calculated (k &ge; 3). Leave-one-out sensitivity analysis was performed. ' +
     'Funnel plot asymmetry was assessed using Egger\'s regression test. ' +
     'Unlike the hazard ratio, the RMST difference does not assume proportional hazards and is ' +
