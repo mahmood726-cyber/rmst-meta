@@ -176,6 +176,25 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
+/* Estimator comparison */
+.compare-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.compare-table th, .compare-table td { padding: 0.4rem 0.6rem; text-align: center; border-bottom: 1px solid var(--border); }
+.compare-table th { text-transform: uppercase; font-size: 0.75rem; color: var(--text-muted); }
+.compare-table .row-label { text-align: left; font-weight: 600; }
+.compare-table .highlight { background: rgba(255,193,7,0.1); }
+[data-theme="dark"] .compare-table .highlight { background: rgba(251,191,36,0.08); }
+.warning-badge {
+  display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px;
+  font-size: 0.75rem; background: #fff3cd; color: #664d03; border: 1px solid var(--warning);
+}
+[data-theme="dark"] .warning-badge { background: #332d1a; color: #fbbf24; }
+/* Export buttons */
+.export-btn {
+  padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--border);
+  border-radius: 3px; background: var(--bg); color: var(--text-muted); cursor: pointer;
+}
+.export-btn:hover { background: var(--border); color: var(--text); }
+.export-group { display: inline-flex; gap: 0.3rem; }
 </style>
 </head>
 <body>
@@ -247,7 +266,13 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
 <!-- Tab 2: Forest Plot -->
 <div class="tab-panel" role="tabpanel" id="panel-forest" aria-labelledby="tab-forest">
   <div class="card">
-    <h3>Forest Plot &mdash; RMST Difference (months)</h3>
+    <div class="flex-between">
+      <h3>Forest Plot &mdash; RMST Difference (months)</h3>
+      <div class="export-group no-print" id="forestExportBtns" style="display:none;">
+        <button class="export-btn" data-export="forest" data-format="svg">SVG</button>
+        <button class="export-btn" data-export="forest" data-format="png">PNG</button>
+      </div>
+    </div>
     <div class="chart-container" id="forestContainer" role="img" aria-label="Forest plot of RMST differences"></div>
     <p id="forestEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</p>
   </div>
@@ -264,6 +289,10 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
     <div class="card">
       <h3>Heterogeneity</h3>
       <div class="stat-grid" id="hetStats"></div>
+    </div>
+    <div class="card" id="compareCard" style="display:none;">
+      <h3>Estimator Comparison (DL vs REML)</h3>
+      <div id="compareResult"></div>
     </div>
     <div class="card" id="hksjCard">
       <h3>Hartung-Knapp-Sidik-Jonkman (HKSJ) Adjustment</h3>
@@ -288,8 +317,18 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
       <div id="tauSensResult"></div>
     </div>
     <div class="card">
-      <h3>Funnel Plot</h3>
+      <div class="flex-between">
+        <h3>Funnel Plot</h3>
+        <div class="export-group no-print" id="funnelExportBtns" style="display:none;">
+          <button class="export-btn" data-export="funnel" data-format="svg">SVG</button>
+          <button class="export-btn" data-export="funnel" data-format="png">PNG</button>
+        </div>
+      </div>
       <div class="chart-container" id="funnelContainer" role="img" aria-label="Funnel plot of RMST differences"></div>
+    </div>
+    <div class="card" id="eggerCard" style="display:none;">
+      <h3>Egger's Test for Funnel Plot Asymmetry</h3>
+      <div id="eggerResult"></div>
     </div>
   </div>
 </div>
