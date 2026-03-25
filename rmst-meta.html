@@ -1554,6 +1554,82 @@ document.addEventListener('click', function(e) {
   });
 });
 
+/* ---------- SVG / PNG Export ---------- */
+// Safety: exported SVGs are self-generated, never contain <script> or external refs
+function exportSVG(containerId, filename) {
+  var container = document.getElementById(containerId);
+  var svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+  var svgData = new XMLSerializer().serializeToString(svgEl);
+  // Ensure xmlns
+  if (svgData.indexOf('xmlns=') === -1) {
+    svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  var blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + svgData], { type: 'image/svg+xml;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPNG(containerId, filename) {
+  var container = document.getElementById(containerId);
+  var svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+  var svgData = new XMLSerializer().serializeToString(svgEl);
+  if (svgData.indexOf('xmlns=') === -1) {
+    svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  var svgUrl = URL.createObjectURL(svgBlob);
+  var img = new Image();
+  img.onload = function() {
+    var scale = 2; // retina
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(svgUrl);
+    canvas.toBlob(function(blob) {
+      if (!blob) {
+        alert('PNG export failed \u2014 try SVG instead.');
+        return;
+      }
+      var pngUrl = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(pngUrl);
+    }, 'image/png');
+  };
+  img.onerror = function() {
+    URL.revokeObjectURL(svgUrl);
+    alert('PNG export failed \u2014 try SVG instead.');
+  };
+  img.src = svgUrl;
+}
+
+// Export button click handler
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-export]');
+  if (!btn) return;
+  var chart = btn.getAttribute('data-export');
+  var format = btn.getAttribute('data-format');
+  var containerId = chart === 'forest' ? 'forestContainer' : 'funnelContainer';
+  var filename = 'rmst-' + chart + '-plot.' + format;
+  if (format === 'svg') exportSVG(containerId, filename);
+  else if (format === 'png') exportPNG(containerId, filename);
+});
+
 /* ---------- Init with 3 empty rows ---------- */
 addStudyRow();
 addStudyRow();
