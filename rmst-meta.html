@@ -843,8 +843,8 @@ function remlMeta(diffs, ses) {
     tau2 = tau2New;
   }
 
-  // Self-check: score residual at convergence
-  if (converged) {
+  // Self-check: score residual at convergence (only for interior solutions, not boundary tau2=0)
+  if (converged && tau2 > 0) {
     var wiCheck = vi.map(function(v) { return 1 / (v + tau2); });
     var sumWCheck = wiCheck.reduce(function(a, b) { return a + b; }, 0);
     var muCheck = 0;
