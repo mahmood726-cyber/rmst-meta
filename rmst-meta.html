@@ -875,6 +875,59 @@ function remlMeta(diffs, ses) {
   };
 }
 
+/* ---------- Egger's test for funnel plot asymmetry (OLS, Egger 1997) ---------- */
+function eggerTest(diffs, ses) {
+  var k = diffs.length;
+  if (k < 3) return null;
+
+  // zi = yi/sei (standardized effect), pi = 1/sei (precision)
+  var z = [], p = [];
+  for (var i = 0; i < k; i++) {
+    z.push(diffs[i] / ses[i]);
+    p.push(1 / ses[i]);
+  }
+
+  // OLS: zi = beta0 + beta1 * pi
+  var pBar = p.reduce(function(a, b) { return a + b; }, 0) / k;
+  var zBar = z.reduce(function(a, b) { return a + b; }, 0) / k;
+
+  var Spp = 0, Spz = 0;
+  for (var j = 0; j < k; j++) {
+    Spp += (p[j] - pBar) * (p[j] - pBar);
+    Spz += (p[j] - pBar) * (z[j] - zBar);
+  }
+
+  if (Spp === 0) return null; // all SEs identical, regression undefined
+
+  var slope = Spz / Spp;
+  var intercept = zBar - slope * pBar;
+
+  // Residuals and MSE
+  var sse = 0;
+  for (var r = 0; r < k; r++) {
+    var resid = z[r] - intercept - slope * p[r];
+    sse += resid * resid;
+  }
+  var df = k - 2;
+  var mse = sse / df;
+
+  var interceptSE = Math.sqrt(mse * (1 / k + pBar * pBar / Spp));
+  var slopeSE = Math.sqrt(mse / Spp);
+
+  var t = intercept / interceptSE;
+  var pValue = 2 * (1 - tCDF(Math.abs(t), df));
+
+  return {
+    intercept: intercept,
+    interceptSE: interceptSE,
+    slope: slope,
+    slopeSE: slopeSE,
+    t: t,
+    df: df,
+    pValue: pValue
+  };
+}
+
 /* ---------- Leave-one-out ---------- */
 function leaveOneOut(studies) {
   var results = [];
