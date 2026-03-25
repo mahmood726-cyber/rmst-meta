@@ -1295,7 +1295,7 @@ function renderAnalysis(meta) {
 
   // Pooled
   document.getElementById('pooledStats').innerHTML =
-    statBox('Pooled RMST Diff', meta.est.toFixed(3) + ' months') +
+    statBox('Pooled RMST Diff (REML)', meta.est.toFixed(3) + ' months') +
     statBox('95% CI', '[' + meta.ci[0].toFixed(3) + ', ' + meta.ci[1].toFixed(3) + ']') +
     statBox('SE', meta.se.toFixed(4)) +
     statBox('z', (meta.est / meta.se).toFixed(3)) +
@@ -1309,6 +1309,34 @@ function renderAnalysis(meta) {
     statBox('Q (' + (meta.k - 1) + ' df)', meta.Q.toFixed(2)) +
     statBox('p (Q)', meta.pQ < 0.001 ? '<0.001' : meta.pQ.toFixed(4));
 
+  // Estimator Comparison card
+  var dl = meta.dl;
+  document.getElementById('compareCard').style.display = '';
+  var maxTau2 = Math.max(dl.tau2, meta.tau2);
+  var diffPct = maxTau2 > 0 ? Math.abs(meta.tau2 - dl.tau2) / maxTau2 * 100 : 0;
+  var hlClass = (meta.k > 2 && diffPct > 5) ? ' class="highlight"' : '';
+  var compareHtml = '<table class="compare-table">' +
+    '<thead><tr><th></th><th>DerSimonian-Laird</th><th>REML</th></tr></thead><tbody>' +
+    '<tr><td class="row-label">Pooled RMST Diff</td><td>' + dl.est.toFixed(4) + '</td><td>' + meta.est.toFixed(4) + '</td></tr>' +
+    '<tr><td class="row-label">95% CI</td><td>[' + dl.ci[0].toFixed(4) + ', ' + dl.ci[1].toFixed(4) + ']</td><td>[' + meta.ci[0].toFixed(4) + ', ' + meta.ci[1].toFixed(4) + ']</td></tr>' +
+    '<tr><td class="row-label">SE</td><td>' + dl.se.toFixed(5) + '</td><td>' + meta.se.toFixed(5) + '</td></tr>' +
+    '<tr' + hlClass + '><td class="row-label">\u03C4\u00B2</td><td>' + dl.tau2.toFixed(5) + '</td><td>' + meta.tau2.toFixed(5) + '</td></tr>' +
+    '<tr><td class="row-label">I\u00B2</td><td>' + dl.I2.toFixed(1) + '%</td><td>' + meta.I2.toFixed(1) + '%</td></tr>';
+  if (dl.hksj && meta.hksj) {
+    compareHtml += '<tr><td class="row-label">HKSJ CI</td><td>[' + dl.hksj.ci[0].toFixed(4) + ', ' + dl.hksj.ci[1].toFixed(4) + ']</td><td>[' + meta.hksj.ci[0].toFixed(4) + ', ' + meta.hksj.ci[1].toFixed(4) + ']</td></tr>';
+  }
+  if (dl.pi && meta.pi) {
+    compareHtml += '<tr><td class="row-label">95% PI</td><td>[' + dl.pi[0].toFixed(4) + ', ' + dl.pi[1].toFixed(4) + ']</td><td>[' + meta.pi[0].toFixed(4) + ', ' + meta.pi[1].toFixed(4) + ']</td></tr>';
+  }
+  compareHtml += '</tbody></table>';
+  if (!meta.converged) {
+    compareHtml += '<p class="mt-1"><span class="warning-badge">Warning</span> REML did not converge within ' + meta.iterations + ' iterations; results are approximate.</p>';
+  }
+  if (meta.k === 2) {
+    compareHtml += '<p class="text-sm text-muted mt-1">Note: With only 2 studies, \u03C4\u00B2 estimates are unreliable.</p>';
+  }
+  document.getElementById('compareResult').innerHTML = compareHtml;
+
   // HKSJ
   if (meta.hksj) {
     document.getElementById('hksjCard').style.display = '';
@@ -1316,7 +1344,7 @@ function renderAnalysis(meta) {
       '<p class="text-sm">HKSJ pooled RMST difference: <strong>' + meta.hksj.est.toFixed(3) +
       '</strong> (95% CI: ' + meta.hksj.ci[0].toFixed(3) + ' to ' + meta.hksj.ci[1].toFixed(3) +
       '), SE = ' + meta.hksj.se.toFixed(4) + '</p>' +
-      '<p class="text-sm text-muted mt-1">DL CI width: ' + (meta.ci[1] - meta.ci[0]).toFixed(3) +
+      '<p class="text-sm text-muted mt-1">REML CI width: ' + (meta.ci[1] - meta.ci[0]).toFixed(3) +
       ' | HKSJ CI width: ' + (meta.hksj.ci[1] - meta.hksj.ci[0]).toFixed(3) + '</p>';
   } else {
     document.getElementById('hksjCard').style.display = 'none';
@@ -1357,6 +1385,31 @@ function renderAnalysis(meta) {
 
   // Funnel
   drawFunnelPlot(meta);
+
+  // Egger's test card
+  if (meta.egger) {
+    document.getElementById('eggerCard').style.display = '';
+    var eg = meta.egger;
+    var egInterp = eg.pValue < 0.10
+      ? 'Evidence of funnel plot asymmetry (consider publication bias).'
+      : 'No evidence of funnel plot asymmetry.';
+    var egHtml = '<div class="stat-grid">' +
+      statBox('Intercept', eg.intercept.toFixed(3)) +
+      statBox('SE', eg.interceptSE.toFixed(3)) +
+      statBox('t', eg.t.toFixed(3)) +
+      statBox('df', eg.df) +
+      statBox('p-value', eg.pValue < 0.001 ? '<0.001' : eg.pValue.toFixed(4)) +
+      '</div>' +
+      '<p class="text-sm mt-1"><strong>' + egInterp + '</strong></p>' +
+      '<p class="text-sm text-muted mt-1">Egger\'s test has low power with fewer than 10 studies.</p>';
+    document.getElementById('eggerResult').innerHTML = egHtml;
+  } else {
+    document.getElementById('eggerCard').style.display = 'none';
+  }
+
+  // Show export buttons
+  document.getElementById('forestExportBtns').style.display = '';
+  document.getElementById('funnelExportBtns').style.display = '';
 }
 
 function statBox(label, value) {
