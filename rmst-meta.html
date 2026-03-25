@@ -1304,6 +1304,23 @@ function drawFunnelPlot(meta) {
     lines.push('<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + accentColor + '" stroke="' + bgColor + '" stroke-width="1"/>');
   });
 
+  // Egger's regression line (if available)
+  if (meta.egger) {
+    var eg = meta.egger;
+    // In funnel coordinates: yi = eg.intercept * sei + eg.slope
+    // At se=0: yi = eg.slope; at se=maxSE: yi = eg.intercept * maxSE + eg.slope
+    var lineY0 = eg.slope;
+    var lineYMax = eg.intercept * maxSE + eg.slope;
+    var lx1 = xS(lineY0), ly1 = yS(0);
+    var lx2 = xS(lineYMax), ly2 = yS(maxSE);
+    // Clip to plot area
+    lx1 = Math.max(ml, Math.min(ml + pW, lx1));
+    lx2 = Math.max(ml, Math.min(ml + pW, lx2));
+    lines.push('<line x1="' + lx1 + '" y1="' + ly1 + '" x2="' + lx2 + '" y2="' + ly2 + '" stroke="' + (isDark ? '#f87171' : '#dc3545') + '" stroke-width="1.5" stroke-dasharray="5,3"/>');
+    // Legend
+    lines.push('<text x="' + (ml + pW - 5) + '" y="' + (mt + 14) + '" text-anchor="end" font-size="9" fill="' + (isDark ? '#f87171' : '#dc3545') + '">Egger regression</text>');
+  }
+
   lines.push('</svg>');
   container.innerHTML = lines.join('\n');
 }
