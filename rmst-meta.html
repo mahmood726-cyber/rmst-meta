@@ -1469,15 +1469,23 @@ function renderReport(meta) {
   var pStr = pValue < 0.001 ? 'p < 0.001' : 'p = ' + pValue.toFixed(4);
 
   // Methods text
-  var methods = '<p>Restricted mean survival time (RMST) differences were pooled using the ' +
-    'DerSimonian-Laird random-effects model. The RMST difference for each study was calculated as ' +
-    'RMST<sub>experimental</sub> &minus; RMST<sub>control</sub>, with the standard error of the difference ' +
-    'computed as SE<sub>diff</sub> = &radic;(SE<sub>exp</sub><sup>2</sup> + SE<sub>ctrl</sub><sup>2</sup>). ' +
-    'Heterogeneity was assessed using the Q statistic and I<sup>2</sup>. A Hartung-Knapp-Sidik-Jonkman (HKSJ) ' +
-    'adjustment was applied for the confidence interval, and a 95% prediction interval was calculated ' +
-    '(k &ge; 3). Leave-one-out sensitivity analysis was performed. Unlike the hazard ratio, the RMST ' +
-    'difference does not assume proportional hazards and is directly interpretable as the difference ' +
-    'in mean event-free survival time up to the specified time horizon.</p>';
+  var methods = '<p>Restricted mean survival time (RMST) differences were pooled using ' +
+    'random-effects meta-analysis with both DerSimonian-Laird (DL) and restricted maximum ' +
+    'likelihood (REML) estimators for between-study variance (\u03C4\u00B2). The RMST difference ' +
+    'for each study was calculated as RMST<sub>experimental</sub> &minus; RMST<sub>control</sub>, ' +
+    'with the standard error of the difference computed as SE<sub>diff</sub> = ' +
+    '&radic;(SE<sub>exp</sub><sup>2</sup> + SE<sub>ctrl</sub><sup>2</sup>). ' +
+    'Heterogeneity was assessed using the Q statistic and I<sup>2</sup>. A Hartung-Knapp-Sidik-Jonkman ' +
+    '(HKSJ) adjustment was applied for the confidence interval, and a 95% prediction interval was ' +
+    'calculated (k &ge; 3). Leave-one-out sensitivity analysis was performed. ' +
+    'Funnel plot asymmetry was assessed using Egger\'s regression test. ' +
+    'Unlike the hazard ratio, the RMST difference does not assume proportional hazards and is ' +
+    'directly interpretable as the difference in mean event-free survival time up to the ' +
+    'specified time horizon.</p>';
+  if (meta.converged === false) {
+    methods += '<p class="text-sm"><strong>Note:</strong> REML did not converge within ' +
+      meta.iterations + ' iterations; DerSimonian-Laird results may be preferred.</p>';
+  }
   document.getElementById('methodsText').innerHTML = methods;
 
   // Results table
@@ -1490,7 +1498,7 @@ function renderReport(meta) {
     tbl += '<tr><td>' + escapeHtml(s.name) + '</td><td>' + s.diff.toFixed(3) + '</td><td>' + s.seDiff.toFixed(3) +
       '</td><td>[' + lo.toFixed(3) + ', ' + hi.toFixed(3) + ']</td><td>' + (meta.weights[i] / sumW * 100).toFixed(1) + '</td></tr>';
   });
-  tbl += '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>RE Pooled (DL)</td><td>' + meta.est.toFixed(3) +
+  tbl += '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>RE Pooled (REML)</td><td>' + meta.est.toFixed(3) +
     '</td><td>' + meta.se.toFixed(3) + '</td><td>[' + meta.ci[0].toFixed(3) + ', ' + meta.ci[1].toFixed(3) + ']</td><td>100.0</td></tr>';
   tbl += '</tbody></table>';
   tbl += '<p class="text-sm text-muted mt-1">Heterogeneity: I<sup>2</sup> = ' + meta.I2.toFixed(1) + '%, ' +
@@ -1501,28 +1509,38 @@ function renderReport(meta) {
   if (meta.pi) {
     tbl += '<p class="text-sm text-muted">95% Prediction interval: [' + meta.pi[0].toFixed(3) + ', ' + meta.pi[1].toFixed(3) + ']</p>';
   }
+  if (meta.egger) {
+    var eg = meta.egger;
+    tbl += '<p class="text-sm text-muted">Egger\'s test: intercept = ' + eg.intercept.toFixed(3) +
+      ', t(' + eg.df + ') = ' + eg.t.toFixed(3) + ', p = ' +
+      (eg.pValue < 0.001 ? '<0.001' : eg.pValue.toFixed(4)) + '</p>';
+  }
   document.getElementById('resultsTableWrap').innerHTML = tbl;
 
   // R code
   var rLines = [];
   rLines.push('# RMST Meta-Analysis in R');
-  rLines.push('# Equivalent to survRM2 / meta package approach');
+  rLines.push('# Equivalent to metafor / meta package approach');
   rLines.push('library(meta)');
+  rLines.push('library(metafor)');
   rLines.push('');
   rLines.push('# Study data');
   rLines.push('study <- c(' + meta.studies.map(function(s) { return '"' + s.name.replace(/"/g, '\\"') + '"'; }).join(', ') + ')');
   rLines.push('rmst_diff <- c(' + meta.studies.map(function(s) { return s.diff.toFixed(4); }).join(', ') + ')');
   rLines.push('se_diff <- c(' + meta.studies.map(function(s) { return s.seDiff.toFixed(4); }).join(', ') + ')');
   rLines.push('');
-  rLines.push('# DerSimonian-Laird random-effects meta-analysis');
+  rLines.push('# REML random-effects meta-analysis (primary)');
   rLines.push('m <- metagen(TE = rmst_diff,');
   rLines.push('             seTE = se_diff,');
   rLines.push('             studlab = study,');
   rLines.push('             sm = "MD",');
-  rLines.push('             method.tau = "DL",');
+  rLines.push('             method.tau = "REML",');
   rLines.push('             hakn = TRUE,  # HKSJ adjustment');
   rLines.push('             prediction = TRUE,');
-  rLines.push('             title = "RMST Difference Meta-Analysis")');
+  rLines.push('             title = "RMST Difference Meta-Analysis (REML)")');
+  rLines.push('');
+  rLines.push('# DL comparison');
+  rLines.push('m_dl <- update(m, method.tau = "DL")');
   rLines.push('');
   rLines.push('# Results');
   rLines.push('summary(m)');
@@ -1530,6 +1548,9 @@ function renderReport(meta) {
   rLines.push('       label.left = "Favours Control",');
   rLines.push('       label.right = "Favours Treatment")');
   rLines.push('funnel(m)');
+  rLines.push('');
+  rLines.push("# Egger's regression test for funnel plot asymmetry");
+  rLines.push('regtest(rma(yi = rmst_diff, sei = se_diff, method = "REML"), model = "lm")');
   rLines.push('');
   rLines.push('# Leave-one-out sensitivity');
   rLines.push('metainf(m, pooled = "random")');
