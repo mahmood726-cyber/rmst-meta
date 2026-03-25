@@ -1075,7 +1075,7 @@ function drawForestPlot(meta) {
   // Layout
   var marginLeft = 200, marginRight = 180, marginTop = 40, marginBottom = 65;
   var rowH = 32, diamondH = 24;
-  var plotH = marginTop + k * rowH + diamondH + 20 + marginBottom;
+  var plotH = marginTop + k * rowH + diamondH * 2 + 20 + marginBottom;
   var totalW = 800;
   var plotW = totalW - marginLeft - marginRight;
 
@@ -1088,6 +1088,10 @@ function drawForestPlot(meta) {
   });
   allLo.push(meta.ci[0]);
   allHi.push(meta.ci[1]);
+  if (meta.dl) {
+    allLo.push(meta.dl.ci[0]);
+    allHi.push(meta.dl.ci[1]);
+  }
 
   var dataMin = Math.min.apply(null, allLo);
   var dataMax = Math.max.apply(null, allHi);
@@ -1102,7 +1106,7 @@ function drawForestPlot(meta) {
   lines.push('<rect width="' + totalW + '" height="' + plotH + '" fill="' + bgColor + '"/>');
 
   // Title
-  lines.push('<text x="' + (totalW / 2) + '" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="' + textColor + '">RMST Difference (months) &mdash; Random Effects (DL)</text>');
+  lines.push('<text x="' + (totalW / 2) + '" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="' + textColor + '">RMST Difference (months) &mdash; Random Effects (REML + DL)</text>');
 
   // Null line at 0
   var x0 = xScale(0);
@@ -1167,22 +1171,43 @@ function drawForestPlot(meta) {
   // Weight header
   lines.push('<text x="' + (totalW - 5) + '" y="' + (marginTop - 5) + '" text-anchor="end" font-size="9" font-weight="600" fill="' + nullColor + '">Weight</text>');
 
-  // Pooled diamond
+  // Pooled diamonds
   var diaY = marginTop + k * rowH + diamondH / 2 + 4;
+  var diaHalf = diamondH / 2 - 2;
+
+  // REML diamond (primary, solid)
   var diaXC = xScale(meta.est);
   var diaXL = xScale(meta.ci[0]);
   var diaXR = xScale(meta.ci[1]);
-  var diaHalf = diamondH / 2 - 2;
-  lines.push('<polygon points="' + diaXL + ',' + diaY + ' ' + diaXC + ',' + (diaY - diaHalf) + ' ' + diaXR + ',' + diaY + ' ' + diaXC + ',' + (diaY + diaHalf) + '" fill="' + accentColor + '" opacity="0.8"/>');
+  var remlStroke = meta.converged === false ? ' stroke="' + accentColor + '" stroke-width="2" stroke-dasharray="4,2"' : '';
+  lines.push('<polygon points="' + diaXL + ',' + diaY + ' ' + diaXC + ',' + (diaY - diaHalf) + ' ' + diaXR + ',' + diaY + ' ' + diaXC + ',' + (diaY + diaHalf) + '" fill="' + accentColor + '" opacity="0.8"' + remlStroke + '/>');
 
-  // Pooled label
-  lines.push('<text x="' + (marginLeft - 8) + '" y="' + (diaY + 4) + '" text-anchor="end" font-size="11" font-weight="700" fill="' + textColor + '">RE Pooled</text>');
+  // DL diamond (comparison, outline only) — slightly below
+  if (meta.dl) {
+    var dlY = diaY + diamondH - 2;
+    var dlXC = xScale(meta.dl.est);
+    var dlXL = xScale(meta.dl.ci[0]);
+    var dlXR = xScale(meta.dl.ci[1]);
+    lines.push('<polygon points="' + dlXL + ',' + dlY + ' ' + dlXC + ',' + (dlY - diaHalf + 2) + ' ' + dlXR + ',' + dlY + ' ' + dlXC + ',' + (dlY + diaHalf - 2) + '" fill="none" stroke="' + accentColor + '" stroke-width="1.5" opacity="0.5"/>');
+  }
+
+  // REML label
+  lines.push('<text x="' + (marginLeft - 8) + '" y="' + (diaY + 4) + '" text-anchor="end" font-size="11" font-weight="700" fill="' + textColor + '">RE (REML)</text>');
   var poolCI = meta.est.toFixed(2) + ' [' + meta.ci[0].toFixed(2) + ', ' + meta.ci[1].toFixed(2) + ']';
   lines.push('<text x="' + (marginLeft + plotW + 8) + '" y="' + (diaY + 4) + '" font-size="10" font-weight="600" fill="' + textColor + '">' + escapeHtml(poolCI) + '</text>');
 
-  // Heterogeneity line
-  var hetText = 'I\u00B2 = ' + meta.I2.toFixed(1) + '%, \u03C4\u00B2 = ' + meta.tau2.toFixed(4) + ', Q = ' + meta.Q.toFixed(2) + ' (p = ' + meta.pQ.toFixed(3) + ')';
-  lines.push('<text x="' + marginLeft + '" y="' + (diaY + 22) + '" font-size="10" fill="' + nullColor + '">' + escapeHtml(hetText) + '</text>');
+  // DL label
+  if (meta.dl) {
+    var dlY2 = diaY + diamondH - 2;
+    lines.push('<text x="' + (marginLeft - 8) + '" y="' + (dlY2 + 4) + '" text-anchor="end" font-size="10" fill="' + nullColor + '">RE (DL)</text>');
+    var dlCI = meta.dl.est.toFixed(2) + ' [' + meta.dl.ci[0].toFixed(2) + ', ' + meta.dl.ci[1].toFixed(2) + ']';
+    lines.push('<text x="' + (marginLeft + plotW + 8) + '" y="' + (dlY2 + 4) + '" font-size="9" fill="' + nullColor + '">' + escapeHtml(dlCI) + '</text>');
+  }
+
+  // Heterogeneity annotation below both diamonds
+  var hetTextY = meta.dl ? diaY + diamondH + 18 : diaY + 22;
+  var hetText = 'I\u00B2 = ' + meta.I2.toFixed(1) + '%, \u03C4\u00B2(REML) = ' + meta.tau2.toFixed(4) + ', Q = ' + meta.Q.toFixed(2) + ' (p = ' + meta.pQ.toFixed(3) + ')';
+  lines.push('<text x="' + marginLeft + '" y="' + hetTextY + '" font-size="10" fill="' + nullColor + '">' + escapeHtml(hetText) + '</text>');
 
   lines.push('</svg>');
   container.innerHTML = lines.join('\n');
