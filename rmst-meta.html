@@ -733,6 +733,20 @@ function chi2CDF(x, df) {
   return normalCDF(z);
 }
 
+/* t-distribution CDF via bisection on tQuantile */
+function tCDF(x, df) {
+  if (df <= 0) return normalCDF(x);
+  if (df >= 300) return normalCDF(x);
+  // Bisection: find p such that tQuantile(p, df) = x
+  var lo = 1e-12, hi = 1 - 1e-12, mid;
+  for (var i = 0; i < 40; i++) {
+    mid = (lo + hi) / 2;
+    if (tQuantile(mid, df) < x) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
 /* ---------- Leave-one-out ---------- */
 function leaveOneOut(studies) {
   var results = [];
