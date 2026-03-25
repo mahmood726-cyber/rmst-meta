@@ -935,7 +935,8 @@ function leaveOneOut(studies) {
     var subset = studies.filter(function(_, j) { return j !== i; });
     var diffs = subset.map(function(s) { return s.diff; });
     var ses = subset.map(function(s) { return s.seDiff; });
-    var res = dlMeta(diffs, ses);
+    var res = remlMeta(diffs, ses);
+    if (!res.converged) res = dlMeta(diffs, ses);
     results.push({
       omitted: studies[i].name,
       est: res.est,
@@ -968,7 +969,8 @@ function tauSensitivity(studies) {
     if (sub.length === 1) {
       results.push({ tau: t, est: diffs[0], ci: [diffs[0] - 1.96 * ses[0], diffs[0] + 1.96 * ses[0]], k: 1 });
     } else {
-      var res = dlMeta(diffs, ses);
+      var res = remlMeta(diffs, ses);
+      if (!res.converged) res = dlMeta(diffs, ses);
       results.push({ tau: t, est: res.est, ci: res.ci, k: res.k });
     }
   });
@@ -993,10 +995,17 @@ function runAnalysis() {
 
   var diffs = studies.map(function(s) { return s.diff; });
   var ses = studies.map(function(s) { return s.seDiff; });
-  var meta = dlMeta(diffs, ses);
+
+  var dl = dlMeta(diffs, ses);
+  var reml = remlMeta(diffs, ses);
+
+  // Primary result is REML; attach DL for comparison
+  var meta = reml;
+  meta.dl = dl;
   meta.studies = studies;
   meta.loo = leaveOneOut(studies);
   meta.tauSens = tauSensitivity(studies);
+  meta.egger = eggerTest(diffs, ses);
 
   lastResults = meta;
 
