@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RMST Meta &mdash; Beyond the Hazard Ratio</title>
+<style>
+:root {
+  --bg: #f8f9fa;
+  --bg-card: #ffffff;
+  --text: #1a1a2e;
+  --text-muted: #6c757d;
+  --border: #dee2e6;
+  --accent: #2563eb;
+  --accent-light: #dbeafe;
+  --accent-dark: #1d4ed8;
+  --danger: #dc3545;
+  --success: #198754;
+  --warning: #ffc107;
+  --diamond: #2563eb;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+}
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #60a5fa;
+  --accent-light: #1e3a5f;
+  --accent-dark: #93bbfd;
+  --danger: #f87171;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --diamond: #60a5fa;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+/* Header */
+.hero {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+  color: #fff;
+  padding: 2rem 1.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+}
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, #0c1929 0%, #1e3a5f 100%);
+}
+.hero h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem; }
+.hero .subtitle { font-size: 0.95rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+.theme-toggle {
+  position: absolute; top: 1rem; right: 1rem;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; padding: 0.4rem 0.7rem; border-radius: var(--radius);
+  cursor: pointer; font-size: 0.85rem;
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.25); }
+.theme-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* Tabs */
+.tabs {
+  display: flex; border-bottom: 2px solid var(--border);
+  background: var(--bg-card); padding: 0 1rem;
+  overflow-x: auto;
+}
+.tab-btn {
+  padding: 0.75rem 1.25rem; border: none; background: none;
+  color: var(--text-muted); cursor: pointer; font-size: 0.9rem;
+  font-weight: 500; border-bottom: 2px solid transparent;
+  margin-bottom: -2px; white-space: nowrap; transition: color 0.2s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tab-panel { display: none; padding: 1.5rem; max-width: 960px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+/* Cards */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+.card h3 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--accent); }
+/* Forms */
+label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.25rem; color: var(--text-muted); }
+input, select, textarea {
+  width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: 0.9rem;
+  background: var(--bg); color: var(--text);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light);
+}
+textarea { font-family: 'Consolas', 'Monaco', monospace; resize: vertical; }
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 1rem; border: none; border-radius: var(--radius);
+  font-size: 0.85rem; font-weight: 500; cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-secondary { background: var(--border); color: var(--text); }
+.btn-secondary:hover { background: #ced4da; }
+[data-theme="dark"] .btn-secondary:hover { background: #475569; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+.btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0; }
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 0.5rem 0.7rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; }
+/* Data entry row */
+.study-row { display: grid; grid-template-columns: 2fr repeat(5,1fr) auto; gap: 0.4rem; align-items: end; margin-bottom: 0.5rem; }
+.study-row.two-arm { grid-template-columns: 2fr repeat(5,1fr) 1fr auto; }
+.study-row input { min-width: 0; }
+.remove-btn {
+  background: none; border: none; color: var(--danger); cursor: pointer;
+  font-size: 1.1rem; padding: 0.3rem; border-radius: var(--radius);
+}
+.remove-btn:hover { background: rgba(220,53,69,0.1); }
+.remove-btn:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
+/* SVG Charts */
+.chart-container { width: 100%; overflow-x: auto; }
+.chart-container svg { display: block; margin: 0 auto; }
+/* Utilities */
+.flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.text-muted { color: var(--text-muted); }
+.text-sm { font-size: 0.85rem; }
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mb-1 { margin-bottom: 0.5rem; }
+.alert { padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.85rem; margin-bottom: 1rem; }
+.alert-info { background: var(--accent-light); border: 1px solid var(--accent); color: var(--accent-dark); }
+.alert-warn { background: #fff3cd; border: 1px solid var(--warning); color: #664d03; }
+[data-theme="dark"] .alert-warn { background: #332d1a; color: #fbbf24; }
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+.stat-box { text-align: center; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); }
+.stat-box .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+.stat-box .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
+.copy-feedback {
+  display: inline-block; margin-left: 0.5rem; font-size: 0.8rem;
+  color: var(--success); opacity: 0; transition: opacity 0.3s;
+}
+.copy-feedback.show { opacity: 1; }
+#csv-area { height: 120px; }
+/* Print */
+@media print {
+  .hero, .tabs, .btn, .theme-toggle, .remove-btn, #csv-area, .no-print { display: none !important; }
+  .tab-panel { display: block !important; max-width: 100%; padding: 0; break-inside: avoid; }
+  body { background: #fff; color: #000; }
+  .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+}
+/* Responsive */
+@media (max-width: 700px) {
+  .study-row, .study-row.two-arm { grid-template-columns: 1fr 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: 1.3rem; }
+}
+/* Accessibility */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+/* Estimator comparison */
+.compare-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.compare-table th, .compare-table td { padding: 0.4rem 0.6rem; text-align: center; border-bottom: 1px solid var(--border); }
+.compare-table th { text-transform: uppercase; font-size: 0.75rem; color: var(--text-muted); }
+.compare-table .row-label { text-align: left; font-weight: 600; }
+.compare-table .highlight { background: rgba(255,193,7,0.1); }
+[data-theme="dark"] .compare-table .highlight { background: rgba(251,191,36,0.08); }
+.warning-badge {
+  display: inline-block; padding: 0.15rem 0.5rem; border-radius: 3px;
+  font-size: 0.75rem; background: #fff3cd; color: #664d03; border: 1px solid var(--warning);
+}
+[data-theme="dark"] .warning-badge { background: #332d1a; color: #fbbf24; }
+/* Export buttons */
+.export-btn {
+  padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--border);
+  border-radius: 3px; background: var(--bg); color: var(--text-muted); cursor: pointer;
+}
+.export-btn:hover { background: var(--border); color: var(--text); }
+.export-group { display: inline-flex; gap: 0.3rem; }
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1>RMST Meta &mdash; Beyond the Hazard Ratio</h1>
+  <p class="subtitle">Meta-Analysis of Restricted Mean Survival Time for Non-Proportional Hazards</p>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">Dark</button>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Main navigation">
+  <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-data" id="tab-data" tabindex="0">Data Input</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-forest" id="tab-forest" tabindex="-1">Forest Plot</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-analysis" id="tab-analysis" tabindex="-1">Analysis</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-report" id="tab-report" tabindex="-1">Report</button>
+</nav>
+
+<!-- Tab 1: Data Input -->
+<div class="tab-panel active" role="tabpanel" id="panel-data" aria-labelledby="tab-data" tabindex="-1">
+  <div class="card">
+    <div class="flex-between">
+      <h3>Study Data</h3>
+      <div class="btn-group no-print">
+        <select id="inputMode" aria-label="Input mode">
+          <option value="twoarm">Two-arm (RMST per arm)</option>
+          <option value="diff">Pre-computed difference</option>
+        </select>
+      </div>
+    </div>
+    <div class="alert alert-info text-sm">
+      RMST = area under the survival curve up to time horizon (tau). Unlike HR, RMST does not assume proportional hazards.
+    </div>
+
+    <div id="studyHeaders" class="study-row two-arm text-sm" style="font-weight:600;color:var(--text-muted);" aria-hidden="true">
+      <span>Study</span><span>RMST Exp</span><span>SE Exp</span><span>RMST Ctrl</span><span>SE Ctrl</span><span>Tau (mo)</span><span></span>
+    </div>
+    <div id="studyHeadersDiff" class="study-row text-sm" style="font-weight:600;color:var(--text-muted);display:none;" aria-hidden="true">
+      <span>Study</span><span>RMST Diff</span><span>SE Diff</span><span>Tau (mo)</span><span></span><span></span>
+    </div>
+    <div id="studyContainer" aria-label="Study data rows"></div>
+
+    <div class="btn-group no-print">
+      <button class="btn btn-primary btn-sm" id="addStudyBtn">+ Add Study</button>
+      <button class="btn btn-danger btn-sm" id="clearBtn">Clear All</button>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <h3>Load Example</h3>
+    <div class="btn-group">
+      <button class="btn btn-secondary btn-sm" id="exNsclc">Immunotherapy (PD-1) for NSCLC</button>
+      <button class="btn btn-secondary btn-sm" id="exSglt2">SGLT2i for Heart Failure</button>
+    </div>
+  </div>
+
+  <div class="card no-print">
+    <h3>CSV Paste</h3>
+    <p class="text-sm text-muted mb-1">Two-arm: Study, RMST_exp, SE_exp, RMST_ctrl, SE_ctrl, Tau<br>
+    Difference: Study, RMST_diff, SE_diff, Tau</p>
+    <textarea id="csv-area" aria-label="Paste CSV data here" placeholder="Paste CSV rows here..."></textarea>
+    <button class="btn btn-primary btn-sm mt-1" id="importCsvBtn">Import CSV</button>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-primary" id="runAnalysis">Run Meta-Analysis</button>
+  </div>
+  <div id="dataErrors" role="alert" aria-live="polite"></div>
+</div>
+
+<!-- Tab 2: Forest Plot -->
+<div class="tab-panel" role="tabpanel" id="panel-forest" aria-labelledby="tab-forest" tabindex="-1">
+  <div class="card">
+    <div class="flex-between">
+      <h3>Forest Plot &mdash; RMST Difference (months)</h3>
+      <div class="export-group no-print" id="forestExportBtns" style="display:none;">
+        <button class="export-btn" data-export="forest" data-format="svg">SVG</button>
+        <button class="export-btn" data-export="forest" data-format="png">PNG</button>
+      </div>
+    </div>
+    <div class="chart-container" id="forestContainer" role="img" aria-label="Forest plot of RMST differences"></div>
+    <p id="forestEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</p>
+  </div>
+</div>
+
+<!-- Tab 3: Analysis -->
+<div class="tab-panel" role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis" tabindex="-1">
+  <div id="analysisEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</div>
+  <div id="analysisContent" style="display:none;">
+    <div class="card">
+      <h3>Pooled Estimates</h3>
+      <div class="stat-grid" id="pooledStats"></div>
+    </div>
+    <div class="card">
+      <h3>Heterogeneity</h3>
+      <div class="stat-grid" id="hetStats"></div>
+    </div>
+    <div class="card" id="compareCard" style="display:none;">
+      <h3>Estimator Comparison (DL vs REML)</h3>
+      <div id="compareResult"></div>
+    </div>
+    <div class="card" id="hksjCard">
+      <h3>Hartung-Knapp-Sidik-Jonkman (HKSJ) Adjustment</h3>
+      <p class="text-sm text-muted mb-1">Wider CI appropriate for small number of studies (k &lt; 10)</p>
+      <div id="hksjResult"></div>
+    </div>
+    <div class="card" id="piCard">
+      <h3>Prediction Interval</h3>
+      <p class="text-sm text-muted mb-1">Expected range of the true effect in a future study</p>
+      <div id="piResult"></div>
+    </div>
+    <div class="card" id="looCard">
+      <h3>Leave-One-Out Sensitivity</h3>
+      <table id="looTable">
+        <thead><tr><th>Omitted</th><th>Pooled RMST Diff</th><th>95% CI</th><th>I<sup>2</sup></th></tr></thead>
+        <tbody id="looBody"></tbody>
+      </table>
+    </div>
+    <div class="card" id="tauSensCard">
+      <h3>Tau-Horizon Sensitivity</h3>
+      <p class="text-sm text-muted mb-1">How pooled RMST difference changes across time horizons (only studies matching each tau). Results are exploratory; pooling across different horizons requires caution.</p>
+      <div id="tauSensResult"></div>
+    </div>
+    <div class="card">
+      <div class="flex-between">
+        <h3>Funnel Plot</h3>
+        <div class="export-group no-print" id="funnelExportBtns" style="display:none;">
+          <button class="export-btn" data-export="funnel" data-format="svg">SVG</button>
+          <button class="export-btn" data-export="funnel" data-format="png">PNG</button>
+        </div>
+      </div>
+      <div class="chart-container" id="funnelContainer" role="img" aria-label="Funnel plot of RMST differences"></div>
+    </div>
+    <div class="card" id="eggerCard" style="display:none;">
+      <h3>Egger's Test for Funnel Plot Asymmetry</h3>
+      <div id="eggerResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 4: Report -->
+<div class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report" tabindex="-1">
+  <div id="reportEmpty" class="text-muted text-sm">Run the meta-analysis from the Data Input tab first.</div>
+  <div id="reportContent" style="display:none;">
+    <div class="card">
+      <div class="flex-between">
+        <h3>Methods Text</h3>
+        <div><button class="btn btn-sm btn-secondary" data-copy="methodsText">Copy</button><span class="copy-feedback" id="fb-methodsText">Copied</span></div>
+      </div>
+      <div id="methodsText" class="text-sm mt-1"></div>
+    </div>
+    <div class="card">
+      <div class="flex-between">
+        <h3>Results Table</h3>
+        <div><button class="btn btn-sm btn-secondary" data-copy="resultsTableWrap">Copy</button><span class="copy-feedback" id="fb-resultsTableWrap">Copied</span></div>
+      </div>
+      <div id="resultsTableWrap" class="mt-1"></div>
+    </div>
+    <div class="card">
+      <div class="flex-between">
+        <h3>R Code (survRM2 equivalent)</h3>
+        <div><button class="btn btn-sm btn-secondary" data-copy="rCode">Copy</button><span class="copy-feedback" id="fb-rCode">Copied</span></div>
+      </div>
+      <pre id="rCode" class="text-sm mt-1" style="background:var(--bg);padding:1rem;border-radius:var(--radius);overflow-x:auto;white-space:pre-wrap;"></pre>
+    </div>
+  </div>
+</div>
+
+<footer style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">
+  RMST Meta v1.1 &mdash; Browser-based, no data leaves your device.
+</footer>
+
+<script>
+/* ============================================================
+   RMST Meta-Analysis Engine
+   ============================================================ */
+'use strict';
+
+/* ---------- Utility: escapeHtml ---------- */
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ---------- Theme toggle ---------- */
+(function initTheme() {
+  var stored = localStorage.getItem('rmstmeta_theme');
+  if (stored === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('themeToggle').textContent = 'Light';
+  }
+})();
+document.getElementById('themeToggle').addEventListener('click', function() {
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    this.textContent = 'Dark';
+    localStorage.setItem('rmstmeta_theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    this.textContent = 'Light';
+    localStorage.setItem('rmstmeta_theme', 'dark');
+  }
+  // Redraw charts if they exist
+  if (lastResults) {
+    drawForestPlot(lastResults);
+    drawFunnelPlot(lastResults);
+  }
+});
+
+/* ---------- Tab navigation ---------- */
+var tabBtns = document.querySelectorAll('.tab-btn');
+var tabPanels = document.querySelectorAll('.tab-panel');
+function switchTab(target) {
+  tabBtns.forEach(function(b) {
+    var isTarget = b.id === 'tab-' + target;
+    b.classList.toggle('active', isTarget);
+    b.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+    b.setAttribute('tabindex', isTarget ? '0' : '-1');
+  });
+  tabPanels.forEach(function(p) {
+    p.classList.toggle('active', p.id === 'panel-' + target);
+  });
+  var activePanel = document.getElementById('panel-' + target);
+  if (activePanel) activePanel.focus();
+}
+document.querySelector('.tabs').addEventListener('click', function(e) {
+  var btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  switchTab(btn.id.replace('tab-', ''));
+});
+document.querySelector('.tabs').addEventListener('keydown', function(e) {
+  var btns = Array.from(tabBtns);
+  var idx = btns.indexOf(document.activeElement);
+  if (idx < 0) return;
+  var newIdx = -1;
+  if (e.key === 'ArrowRight') newIdx = (idx + 1) % btns.length;
+  else if (e.key === 'ArrowLeft') newIdx = (idx - 1 + btns.length) % btns.length;
+  else if (e.key === 'Home') newIdx = 0;
+  else if (e.key === 'End') newIdx = btns.length - 1;
+  if (newIdx >= 0) {
+    e.preventDefault();
+    btns[newIdx].focus();
+    switchTab(btns[newIdx].id.replace('tab-', ''));
+  }
+});
+
+/* ---------- Input mode ---------- */
+var inputMode = document.getElementById('inputMode');
+var studyContainer = document.getElementById('studyContainer');
+var headersTwoArm = document.getElementById('studyHeaders');
+var headersDiff = document.getElementById('studyHeadersDiff');
+
+function getMode() { return inputMode.value; }
+
+inputMode.addEventListener('change', function() {
+  var mode = getMode();
+  headersTwoArm.style.display = mode === 'twoarm' ? '' : 'none';
+  headersDiff.style.display = mode === 'diff' ? '' : 'none';
+  studyContainer.innerHTML = '';
+  addStudyRow();
+  addStudyRow();
+  addStudyRow();
+});
+
+/* ---------- Study row management ---------- */
+var studyCounter = 0;
+function addStudyRow(data) {
+  studyCounter++;
+  var id = studyCounter;
+  var mode = getMode();
+  var div = document.createElement('div');
+  div.className = 'study-row' + (mode === 'twoarm' ? ' two-arm' : '');
+  div.setAttribute('data-id', id);
+
+  if (mode === 'twoarm') {
+    div.innerHTML =
+      '<input type="text" aria-label="Study name" placeholder="Study name" data-field="name" value="' + escapeHtml((data && data.name) || '') + '">' +
+      '<input type="number" step="any" aria-label="RMST experimental" placeholder="RMST exp" data-field="rmst1" value="' + (data && data.rmst1 != null ? data.rmst1 : '') + '">' +
+      '<input type="number" step="any" aria-label="SE experimental" placeholder="SE exp" data-field="se1" value="' + (data && data.se1 != null ? data.se1 : '') + '">' +
+      '<input type="number" step="any" aria-label="RMST control" placeholder="RMST ctrl" data-field="rmst2" value="' + (data && data.rmst2 != null ? data.rmst2 : '') + '">' +
+      '<input type="number" step="any" aria-label="SE control" placeholder="SE ctrl" data-field="se2" value="' + (data && data.se2 != null ? data.se2 : '') + '">' +
+      '<input type="number" step="any" aria-label="Time horizon tau" placeholder="Tau (mo)" data-field="tau" value="' + (data && data.tau != null ? data.tau : '') + '">' +
+      '<span></span>' +
+      '<button class="remove-btn" aria-label="Remove study" title="Remove study">&times;</button>';
+  } else {
+    div.innerHTML =
+      '<input type="text" aria-label="Study name" placeholder="Study name" data-field="name" value="' + escapeHtml((data && data.name) || '') + '">' +
+      '<input type="number" step="any" aria-label="RMST difference" placeholder="RMST diff" data-field="diff" value="' + (data && data.diff != null ? data.diff : '') + '">' +
+      '<input type="number" step="any" aria-label="SE of difference" placeholder="SE diff" data-field="seDiff" value="' + (data && data.seDiff != null ? data.seDiff : '') + '">' +
+      '<input type="number" step="any" aria-label="Time horizon tau" placeholder="Tau (mo)" data-field="tau" value="' + (data && data.tau != null ? data.tau : '') + '">' +
+      '<span></span><span></span>' +
+      '<button class="remove-btn" aria-label="Remove study" title="Remove study">&times;</button>';
+  }
+  studyContainer.appendChild(div);
+}
+
+studyContainer.addEventListener('click', function(e) {
+  if (e.target.classList.contains('remove-btn')) {
+    var row = e.target.closest('.study-row');
+    if (studyContainer.children.length > 1) row.remove();
+  }
+});
+
+document.getElementById('addStudyBtn').addEventListener('click', function() { addStudyRow(); });
+document.getElementById('clearBtn').addEventListener('click', function() {
+  studyContainer.innerHTML = '';
+  addStudyRow();
+  addStudyRow();
+  addStudyRow();
+});
+
+/* ---------- Collect data ---------- */
+function collectStudies() {
+  var rows = studyContainer.querySelectorAll('.study-row');
+  var studies = [];
+  var mode = getMode();
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    var get = function(f) { var el = r.querySelector('[data-field="' + f + '"]'); return el ? el.value.trim() : ''; };
+    var name = get('name') || ('Study ' + (i + 1));
+    var tau = parseFloat(get('tau'));
+
+    if (mode === 'twoarm') {
+      var rmst1 = parseFloat(get('rmst1'));
+      var se1 = parseFloat(get('se1'));
+      var rmst2 = parseFloat(get('rmst2'));
+      var se2 = parseFloat(get('se2'));
+      if (!isFinite(rmst1) || !isFinite(se1) || !isFinite(rmst2) || !isFinite(se2)) continue;
+      if (se1 <= 0 || se2 <= 0) continue;
+      var diff = rmst1 - rmst2;
+      var seDiff = Math.sqrt(se1 * se1 + se2 * se2);
+      studies.push({ name: name, diff: diff, seDiff: seDiff, tau: isFinite(tau) ? tau : null, rmst1: rmst1, se1: se1, rmst2: rmst2, se2: se2 });
+    } else {
+      var diff2 = parseFloat(get('diff'));
+      var seD = parseFloat(get('seDiff'));
+      if (!isFinite(diff2) || !isFinite(seD) || seD <= 0) continue;
+      studies.push({ name: name, diff: diff2, seDiff: seD, tau: isFinite(tau) ? tau : null });
+    }
+  }
+  return studies;
+}
+
+/* ---------- Examples ---------- */
+var EXAMPLE_NSCLC = [
+  { name: 'CheckMate-017 (2015)', rmst1: 11.2, se1: 0.6, rmst2: 9.4, se2: 0.5, tau: 24 },
+  { name: 'CheckMate-057 (2015)', rmst1: 12.3, se1: 0.5, rmst2: 9.6, se2: 0.4, tau: 24 },
+  { name: 'KEYNOTE-010 (2016)', rmst1: 13.4, se1: 0.7, rmst2: 10.1, se2: 0.6, tau: 24 },
+  { name: 'OAK (2017)', rmst1: 12.8, se1: 0.4, rmst2: 10.5, se2: 0.4, tau: 24 },
+  { name: 'KEYNOTE-024 (2016)', rmst1: 15.1, se1: 0.8, rmst2: 11.3, se2: 0.7, tau: 24 }
+];
+var EXAMPLE_SGLT2 = [
+  { name: 'DAPA-HF (2019)', rmst1: 20.1, se1: 0.3, rmst2: 19.4, se2: 0.3, tau: 24 },
+  { name: 'EMPEROR-Reduced (2020)', rmst1: 14.2, se1: 0.2, rmst2: 13.6, se2: 0.2, tau: 18 },
+  { name: 'SOLOIST-WHF (2021)', rmst1: 8.1, se1: 0.3, rmst2: 7.5, se2: 0.3, tau: 12 }
+];
+
+function loadExample(ex) {
+  inputMode.value = 'twoarm';
+  inputMode.dispatchEvent(new Event('change'));
+  studyContainer.innerHTML = '';
+  ex.forEach(function(s) { addStudyRow(s); });
+}
+
+document.getElementById('exNsclc').addEventListener('click', function() { loadExample(EXAMPLE_NSCLC); });
+document.getElementById('exSglt2').addEventListener('click', function() { loadExample(EXAMPLE_SGLT2); });
+
+/* ---------- CSV import ---------- */
+document.getElementById('importCsvBtn').addEventListener('click', function() {
+  var text = document.getElementById('csv-area').value.trim();
+  if (!text) return;
+  var lines = text.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+  // detect mode from column count of first data row
+  var firstCols = lines[0].split(/[,\t]/);
+  // skip header if first cell is non-numeric-ish
+  var startIdx = 0;
+  if (isNaN(parseFloat(firstCols[1]))) startIdx = 1;
+
+  var testCols = (lines[startIdx] || lines[0]).split(/[,\t]/).length;
+  if (testCols >= 6) {
+    inputMode.value = 'twoarm';
+  } else {
+    inputMode.value = 'diff';
+  }
+  inputMode.dispatchEvent(new Event('change'));
+  studyContainer.innerHTML = '';
+
+  for (var i = startIdx; i < lines.length; i++) {
+    var cols = lines[i].split(/[,\t]/).map(function(c) { return c.trim(); });
+    if (testCols >= 6) {
+      addStudyRow({ name: cols[0] || '', rmst1: parseFloat(cols[1]), se1: parseFloat(cols[2]), rmst2: parseFloat(cols[3]), se2: parseFloat(cols[4]), tau: parseFloat(cols[5]) });
+    } else {
+      addStudyRow({ name: cols[0] || '', diff: parseFloat(cols[1]), seDiff: parseFloat(cols[2]), tau: parseFloat(cols[3]) });
+    }
+  }
+});
+
+/* ============================================================
+   Statistical Functions
+   ============================================================ */
+
+/* Normal CDF (Abramowitz & Stegun 26.2.17) */
+function normalCDF(x) {
+  if (x < -8) return 0;
+  if (x > 8) return 1;
+  var a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741, a4 = -1.453152027, a5 = 1.061405429;
+  var p = 0.3275911;
+  var sign = x < 0 ? -1 : 1;
+  x = Math.abs(x) / Math.SQRT2;
+  var t = 1.0 / (1.0 + p * x);
+  var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1.0 + sign * y);
+}
+
+/* Normal quantile (rational approximation, Beasley-Springer-Moro) */
+function normalQuantile(p) {
+  if (p <= 0) return -Infinity;
+  if (p >= 1) return Infinity;
+  if (p === 0.5) return 0;
+  // Rational approximation
+  var a = [
+    -3.969683028665376e+01, 2.209460984245205e+02,
+    -2.759285104469687e+02, 1.383577518672690e+02,
+    -3.066479806614716e+01, 2.506628277459239e+00
+  ];
+  var b = [
+    -5.447609879822406e+01, 1.615858368580409e+02,
+    -1.556989798598866e+02, 6.680131188771972e+01,
+    -1.328068155288572e+01
+  ];
+  var c = [
+    -7.784894002430293e-03, -3.223964580411365e-01,
+    -2.400758277161838e+00, -2.549732539343734e+00,
+    4.374664141464968e+00, 2.938163982698783e+00
+  ];
+  var d = [
+    7.784695709041462e-03, 3.224671290700398e-01,
+    2.445134137142996e+00, 3.754408661907416e+00
+  ];
+  var pLow = 0.02425, pHigh = 1 - pLow;
+  var q, r;
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+           ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  } else if (p <= pHigh) {
+    q = p - 0.5;
+    r = q * q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5]) * q /
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  } else {
+    q = Math.sqrt(-2 * Math.log(1 - p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+}
+
+/* t-distribution quantile — exact table for small df, Cornish-Fisher for larger */
+function tQuantile(p, df) {
+  if (df <= 0) return normalQuantile(p);
+  if (df >= 300) return normalQuantile(p);
+  // Exact t_{0.975,df} lookup for df 1..30 (scipy.stats.t.ppf(0.975, df))
+  var T975 = [0,
+    12.7062,4.3027,3.1824,2.7764,2.5706,2.4469,2.3646,2.3060,2.2622,2.2281,
+    2.2010,2.1788,2.1604,2.1448,2.1314,2.1199,2.1098,2.1009,2.0930,2.0860,
+    2.0796,2.0739,2.0687,2.0639,2.0595,2.0555,2.0518,2.0484,2.0452,2.0423
+  ];
+  // For p=0.975 or p=0.025, use exact table
+  if (df <= 30 && df === Math.floor(df)) {
+    var z = normalQuantile(p);
+    // For 0.975 and 0.025 specifically
+    if (Math.abs(p - 0.975) < 1e-9) return T975[df];
+    if (Math.abs(p - 0.025) < 1e-9) return -T975[df];
+    // For other p values with small df, use exact formulas for df 1-2 and improved expansion otherwise
+    if (df === 1) return Math.tan(Math.PI * (p - 0.5));
+    if (df === 2) {
+      var alpha2 = 2 * Math.min(p, 1 - p);
+      var val = Math.sqrt(2.0 / alpha2 - 2.0);
+      return p < 0.5 ? -val : val;
+    }
+    // Cornish-Fisher 4-term expansion for other quantiles
+    var g1 = (z * z * z + z) / (4 * df);
+    var g2 = (5 * z * z * z * z * z + 16 * z * z * z + 3 * z) / (96 * df * df);
+    var g3 = (3 * Math.pow(z,7) + 19 * Math.pow(z,5) + 17 * z * z * z - 15 * z) / (384 * df * df * df);
+    return z + g1 + g2 + g3;
+  }
+  // df > 30 or non-integer: Cornish-Fisher expansion
+  var z2 = normalQuantile(p);
+  var g1b = (z2 * z2 * z2 + z2) / (4 * df);
+  var g2b = (5 * z2 * z2 * z2 * z2 * z2 + 16 * z2 * z2 * z2 + 3 * z2) / (96 * df * df);
+  return z2 + g1b + g2b;
+}
+
+/* ---------- DerSimonian-Laird meta-analysis ---------- */
+function dlMeta(diffs, ses) {
+  var k = diffs.length;
+  if (k === 0) return null;
+  if (k === 1) {
+    var z975 = normalQuantile(0.975);
+    return { k:1, est:diffs[0], se:ses[0], ci:[diffs[0]-z975*ses[0], diffs[0]+z975*ses[0]], tau2:0, I2:0, Q:0, pQ:1, pi:null, hksj:null, weights:[1], diffs:diffs, ses:ses };
+  }
+  var wi = ses.map(function(s) { return 1 / (s * s); });
+  var sumW = wi.reduce(function(a, b) { return a + b; }, 0);
+  var sumWd = 0;
+  for (var i = 0; i < k; i++) sumWd += wi[i] * diffs[i];
+  var muFE = sumWd / sumW;
+
+  // Q statistic
+  var Q = 0;
+  for (var i2 = 0; i2 < k; i2++) Q += wi[i2] * (diffs[i2] - muFE) * (diffs[i2] - muFE);
+
+  var sumW2 = wi.reduce(function(a, w) { return a + w * w; }, 0);
+  var C = sumW - sumW2 / sumW;
+  var tau2 = Math.max(0, (Q - (k - 1)) / C);
+
+  // RE weights
+  var wiStar = ses.map(function(s) { return 1 / (s * s + tau2); });
+  var sumWStar = wiStar.reduce(function(a, b) { return a + b; }, 0);
+  var sumWdStar = 0;
+  for (var i3 = 0; i3 < k; i3++) sumWdStar += wiStar[i3] * diffs[i3];
+  var muRE = sumWdStar / sumWStar;
+  var seRE = Math.sqrt(1 / sumWStar);
+
+  var z975 = normalQuantile(0.975);
+  var ci = [muRE - z975 * seRE, muRE + z975 * seRE];
+
+  // I-squared
+  var I2 = k > 1 ? Math.max(0, (Q - (k - 1)) / Q) * 100 : 0;
+
+  // Prediction interval (requires k >= 3)
+  var pi = null;
+  if (k >= 3) {
+    var tVal = tQuantile(0.975, k - 2);
+    var piHalf = tVal * Math.sqrt(tau2 + seRE * seRE);
+    pi = [muRE - piHalf, muRE + piHalf];
+  }
+
+  // HKSJ adjustment
+  var hksj = null;
+  if (k >= 2) {
+    var qHksj = 0;
+    for (var ih = 0; ih < k; ih++) {
+      qHksj += wiStar[ih] * (diffs[ih] - muRE) * (diffs[ih] - muRE);
+    }
+    var varHksj = qHksj / ((k - 1) * sumWStar);
+    var seHksj = Math.sqrt(Math.max(varHksj, seRE * seRE));
+    var tValHksj = tQuantile(0.975, k - 1);
+    hksj = {
+      est: muRE,
+      se: seHksj,
+      ci: [muRE - tValHksj * seHksj, muRE + tValHksj * seHksj]
+    };
+  }
+
+  return {
+    k: k,
+    est: muRE,
+    se: seRE,
+    ci: ci,
+    tau2: tau2,
+    I2: I2,
+    Q: Q,
+    pQ: 1 - chi2CDF(Q, k - 1),
+    pi: pi,
+    hksj: hksj,
+    weights: wiStar,
+    diffs: diffs,
+    ses: ses
+  };
+}
+
+/* Chi-squared CDF via regularized gamma (Wilson-Hilferty) */
+function chi2CDF(x, df) {
+  if (df <= 0 || x <= 0) return 0;
+  // Wilson-Hilferty approximation
+  var z = Math.pow(x / df, 1.0 / 3.0) - (1.0 - 2.0 / (9.0 * df));
+  z = z / Math.sqrt(2.0 / (9.0 * df));
+  return normalCDF(z);
+}
+
+/* t-distribution CDF via bisection on tQuantile */
+function tCDF(x, df) {
+  if (df <= 0) return normalCDF(x);
+  if (df >= 300) return normalCDF(x);
+  // Bisection: find p such that tQuantile(p, df) = x
+  var lo = 1e-12, hi = 1 - 1e-12, mid;
+  for (var i = 0; i < 40; i++) {
+    mid = (lo + hi) / 2;
+    if (tQuantile(mid, df) < x) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+/* ---------- REML meta-analysis (Fisher scoring, Viechtbauer 2005) ---------- */
+function remlMeta(diffs, ses) {
+  var k = diffs.length;
+  if (k === 0) return null;
+  if (k === 1) {
+    var z975s = normalQuantile(0.975);
+    return { k:1, est:diffs[0], se:ses[0], ci:[diffs[0]-z975s*ses[0], diffs[0]+z975s*ses[0]], tau2:0, I2:0, Q:0, pQ:1, pi:null, hksj:null, weights:[1/(ses[0]*ses[0])], diffs:diffs, ses:ses, converged:true, iterations:0 };
+  }
+
+  // Fixed-effect Q (invariant, same as DL)
+  var vi = ses.map(function(s) { return s * s; });
+  var wiFE = vi.map(function(v) { return 1 / v; });
+  var sumWFE = wiFE.reduce(function(a, b) { return a + b; }, 0);
+  var muFE = 0;
+  for (var i = 0; i < k; i++) muFE += wiFE[i] * diffs[i];
+  muFE /= sumWFE;
+  var Q = 0;
+  for (var iq = 0; iq < k; iq++) Q += wiFE[iq] * (diffs[iq] - muFE) * (diffs[iq] - muFE);
+
+  // DL tau2 as warm start
+  var sumW2FE = wiFE.reduce(function(a, w) { return a + w * w; }, 0);
+  var C = sumWFE - sumW2FE / sumWFE;
+  var tau2 = Math.max(0, (Q - (k - 1)) / C);
+
+  // Fisher scoring iteration
+  var converged = false;
+  var maxIter = 100;
+  var iter;
+  for (iter = 0; iter < maxIter; iter++) {
+    var wiStar = vi.map(function(v) { return 1 / (v + tau2); });
+    var sumW = wiStar.reduce(function(a, b) { return a + b; }, 0);
+    var sumW2 = 0, sumW3 = 0;
+    for (var iw = 0; iw < k; iw++) {
+      sumW2 += wiStar[iw] * wiStar[iw];
+      sumW3 += wiStar[iw] * wiStar[iw] * wiStar[iw];
+    }
+    var muStar = 0;
+    for (var im = 0; im < k; im++) muStar += wiStar[im] * diffs[im];
+    muStar /= sumW;
+
+    var P = 0;
+    for (var ip = 0; ip < k; ip++) P += wiStar[ip] * wiStar[ip] * (diffs[ip] - muStar) * (diffs[ip] - muStar);
+
+    // Score: dl/dtau2 = -0.5 * [sum(wi*) - sum(wi*^2)/sum(wi*) - P]
+    var A = sumW - sumW2 / sumW;
+    var score = P - A;
+
+    // Fisher information: 0.5 * [sum(wi*^2) - 2*sum(wi*^3)/sum(wi*) + (sum(wi*^2)/sum(wi*))^2]
+    var info = sumW2 - 2 * sumW3 / sumW + (sumW2 / sumW) * (sumW2 / sumW);
+
+    if (info <= 0) break; // degenerate, stop
+
+    var tau2New = Math.max(0, tau2 + score / info);
+    if (Math.abs(tau2New - tau2) < 1e-8) {
+      tau2 = tau2New;
+      converged = true;
+      break;
+    }
+    tau2 = tau2New;
+  }
+
+  // Self-check: score residual at convergence (only for interior solutions, not boundary tau2=0)
+  if (converged && tau2 > 0) {
+    var wiCheck = vi.map(function(v) { return 1 / (v + tau2); });
+    var sumWCheck = wiCheck.reduce(function(a, b) { return a + b; }, 0);
+    var muCheck = 0;
+    for (var ic = 0; ic < k; ic++) muCheck += wiCheck[ic] * diffs[ic];
+    muCheck /= sumWCheck;
+    var qRE = 0;
+    for (var iqc = 0; iqc < k; iqc++) qRE += wiCheck[iqc] * (diffs[iqc] - muCheck) * (diffs[iqc] - muCheck);
+    var Acheck = sumWCheck - wiCheck.reduce(function(a, w) { return a + w * w; }, 0) / sumWCheck;
+    if (Math.abs(qRE - Acheck) > 1e-4) {
+      console.warn('REML score residual:', Math.abs(qRE - Acheck));
+    }
+  }
+
+  // Compute final estimates with converged tau2
+  var wiRE = vi.map(function(v) { return 1 / (v + tau2); });
+  var sumWRE = wiRE.reduce(function(a, b) { return a + b; }, 0);
+  var muRE = 0;
+  for (var ir = 0; ir < k; ir++) muRE += wiRE[ir] * diffs[ir];
+  muRE /= sumWRE;
+  var seRE = Math.sqrt(1 / sumWRE);
+
+  var z975 = normalQuantile(0.975);
+  var ci = [muRE - z975 * seRE, muRE + z975 * seRE];
+  var I2 = k > 1 ? Math.max(0, (Q - (k - 1)) / Q) * 100 : 0;
+
+  // Prediction interval (k >= 3)
+  var pi = null;
+  if (k >= 3) {
+    var tVal = tQuantile(0.975, k - 2);
+    var piHalf = tVal * Math.sqrt(tau2 + seRE * seRE);
+    pi = [muRE - piHalf, muRE + piHalf];
+  }
+
+  // HKSJ adjustment (k >= 2)
+  var hksj = null;
+  if (k >= 2) {
+    var qHksj = 0;
+    for (var ih = 0; ih < k; ih++) {
+      qHksj += wiRE[ih] * (diffs[ih] - muRE) * (diffs[ih] - muRE);
+    }
+    var varHksj = qHksj / ((k - 1) * sumWRE);
+    var seHksj = Math.sqrt(Math.max(varHksj, seRE * seRE));
+    var tValHksj = tQuantile(0.975, k - 1);
+    hksj = {
+      est: muRE,
+      se: seHksj,
+      ci: [muRE - tValHksj * seHksj, muRE + tValHksj * seHksj]
+    };
+  }
+
+  return {
+    k: k,
+    est: muRE,
+    se: seRE,
+    ci: ci,
+    tau2: tau2,
+    I2: I2,
+    Q: Q,
+    pQ: 1 - chi2CDF(Q, k - 1),
+    pi: pi,
+    hksj: hksj,
+    weights: wiRE,
+    diffs: diffs,
+    ses: ses,
+    converged: converged,
+    iterations: iter + 1
+  };
+}
+
+/* ---------- Egger's test for funnel plot asymmetry (OLS, Egger 1997) ---------- */
+function eggerTest(diffs, ses) {
+  var k = diffs.length;
+  if (k < 3) return null;
+
+  // zi = yi/sei (standardized effect), pi = 1/sei (precision)
+  var z = [], p = [];
+  for (var i = 0; i < k; i++) {
+    z.push(diffs[i] / ses[i]);
+    p.push(1 / ses[i]);
+  }
+
+  // OLS: zi = beta0 + beta1 * pi
+  var pBar = p.reduce(function(a, b) { return a + b; }, 0) / k;
+  var zBar = z.reduce(function(a, b) { return a + b; }, 0) / k;
+
+  var Spp = 0, Spz = 0;
+  for (var j = 0; j < k; j++) {
+    Spp += (p[j] - pBar) * (p[j] - pBar);
+    Spz += (p[j] - pBar) * (z[j] - zBar);
+  }
+
+  if (Spp === 0) return null; // all SEs identical, regression undefined
+
+  var slope = Spz / Spp;
+  var intercept = zBar - slope * pBar;
+
+  // Residuals and MSE
+  var sse = 0;
+  for (var r = 0; r < k; r++) {
+    var resid = z[r] - intercept - slope * p[r];
+    sse += resid * resid;
+  }
+  var df = k - 2;
+  var mse = sse / df;
+
+  var interceptSE = Math.sqrt(mse * (1 / k + pBar * pBar / Spp));
+  var slopeSE = Math.sqrt(mse / Spp);
+
+  var t = intercept / interceptSE;
+  var pValue = 2 * (1 - tCDF(Math.abs(t), df));
+
+  return {
+    intercept: intercept,
+    interceptSE: interceptSE,
+    slope: slope,
+    slopeSE: slopeSE,
+    t: t,
+    df: df,
+    pValue: pValue
+  };
+}
+
+/* ---------- Leave-one-out ---------- */
+function leaveOneOut(studies) {
+  var results = [];
+  for (var i = 0; i < studies.length; i++) {
+    var subset = studies.filter(function(_, j) { return j !== i; });
+    var diffs = subset.map(function(s) { return s.diff; });
+    var ses = subset.map(function(s) { return s.seDiff; });
+    if (subset.length < 2) {
+      results.push({
+        omitted: studies[i].name,
+        est: diffs[0],
+        ci: [diffs[0] - normalQuantile(0.975) * ses[0], diffs[0] + normalQuantile(0.975) * ses[0]],
+        I2: 0
+      });
+      continue;
+    }
+    var res = remlMeta(diffs, ses);
+    if (!res.converged) res = dlMeta(diffs, ses);
+    results.push({
+      omitted: studies[i].name,
+      est: res.est,
+      ci: res.ci,
+      I2: res.I2
+    });
+  }
+  return results;
+}
+
+/* ---------- Tau-horizon sensitivity ---------- */
+function tauSensitivity(studies) {
+  // Group by tau, compute meta for each distinct tau
+  var tauMap = {};
+  studies.forEach(function(s) {
+    if (s.tau != null) {
+      var key = String(s.tau);
+      if (!tauMap[key]) tauMap[key] = [];
+      tauMap[key].push(s);
+    }
+  });
+  var taus = Object.keys(tauMap).map(Number).sort(function(a, b) { return a - b; });
+  if (taus.length <= 1) return null;
+  var results = [];
+  taus.forEach(function(t) {
+    var sub = tauMap[String(t)];
+    if (sub.length < 1) return;
+    var diffs = sub.map(function(s) { return s.diff; });
+    var ses = sub.map(function(s) { return s.seDiff; });
+    if (sub.length === 1) {
+      results.push({ tau: t, est: diffs[0], ci: [diffs[0] - 1.96 * ses[0], diffs[0] + 1.96 * ses[0]], k: 1 });
+    } else {
+      var res = remlMeta(diffs, ses);
+      if (!res.converged) res = dlMeta(diffs, ses);
+      results.push({ tau: t, est: res.est, ci: res.ci, k: res.k });
+    }
+  });
+  return results.length > 1 ? results : null;
+}
+
+/* ============================================================
+   Run Analysis
+   ============================================================ */
+var lastResults = null;
+
+document.getElementById('runAnalysis').addEventListener('click', runAnalysis);
+
+function runAnalysis() {
+  var errDiv = document.getElementById('dataErrors');
+  errDiv.innerHTML = '';
+  var studies = collectStudies();
+  if (studies.length < 2) {
+    errDiv.innerHTML = '<div class="alert alert-warn">Need at least 2 valid studies to run meta-analysis.</div>';
+    return;
+  }
+
+  var diffs = studies.map(function(s) { return s.diff; });
+  var ses = studies.map(function(s) { return s.seDiff; });
+
+  var dl = dlMeta(diffs, ses);
+  var reml = remlMeta(diffs, ses);
+
+  // Primary result is REML; attach DL for comparison
+  var meta = reml;
+  meta.dl = dl;
+  meta.studies = studies;
+  meta.loo = leaveOneOut(studies);
+  meta.tauSens = tauSensitivity(studies);
+  meta.egger = eggerTest(diffs, ses);
+
+  lastResults = meta;
+
+  drawForestPlot(meta);
+  renderAnalysis(meta);
+  renderReport(meta);
+
+  switchTab('forest');
+}
+
+/* ============================================================
+   Forest Plot (SVG)
+   ============================================================ */
+function drawForestPlot(meta) {
+  var container = document.getElementById('forestContainer');
+  document.getElementById('forestEmpty').style.display = 'none';
+
+  var studies = meta.studies;
+  var k = studies.length;
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1a1a2e';
+  var gridColor = isDark ? '#334155' : '#dee2e6';
+  var nullColor = isDark ? '#94a3b8' : '#6c757d';
+  var accentColor = isDark ? '#60a5fa' : '#2563eb';
+  var bgColor = isDark ? '#1e293b' : '#ffffff';
+
+  // Layout
+  var marginLeft = 200, marginRight = 180, marginTop = 40, marginBottom = 65;
+  var rowH = 32, diamondH = 24;
+  var plotH = marginTop + k * rowH + diamondH * 2 + 20 + marginBottom;
+  var totalW = 800;
+  var plotW = totalW - marginLeft - marginRight;
+
+  // Scale
+  var z975 = normalQuantile(0.975);
+  var allLo = [], allHi = [];
+  studies.forEach(function(s) {
+    allLo.push(s.diff - z975 * s.seDiff);
+    allHi.push(s.diff + z975 * s.seDiff);
+  });
+  allLo.push(meta.ci[0]);
+  allHi.push(meta.ci[1]);
+  if (meta.dl) {
+    allLo.push(meta.dl.ci[0]);
+    allHi.push(meta.dl.ci[1]);
+  }
+
+  var dataMin = Math.min.apply(null, allLo);
+  var dataMax = Math.max.apply(null, allHi);
+  var pad = (dataMax - dataMin) * 0.15;
+  var xMin = dataMin - pad;
+  var xMax = dataMax + pad;
+
+  function xScale(v) { return marginLeft + (v - xMin) / (xMax - xMin) * plotW; }
+
+  var lines = [];
+  lines.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + totalW + '" height="' + plotH + '" role="img" aria-label="Forest plot">');
+  lines.push('<rect width="' + totalW + '" height="' + plotH + '" fill="' + bgColor + '"/>');
+
+  // Title
+  lines.push('<text x="' + (totalW / 2) + '" y="22" text-anchor="middle" font-size="13" font-weight="600" fill="' + textColor + '">RMST Difference (months) &mdash; Random Effects (REML + DL)</text>');
+
+  // Null line at 0
+  var x0 = xScale(0);
+  if (x0 >= marginLeft && x0 <= marginLeft + plotW) {
+    lines.push('<line x1="' + x0 + '" y1="' + marginTop + '" x2="' + x0 + '" y2="' + (plotH - marginBottom + 10) + '" stroke="' + nullColor + '" stroke-width="1" stroke-dasharray="4,3"/>');
+  }
+
+  // Axis
+  var nTicks = 7;
+  var step = niceStep(xMin, xMax, nTicks);
+  var axisY = plotH - marginBottom + 10;
+  lines.push('<line x1="' + marginLeft + '" y1="' + axisY + '" x2="' + (marginLeft + plotW) + '" y2="' + axisY + '" stroke="' + gridColor + '" stroke-width="1"/>');
+  for (var tick = Math.ceil(xMin / step) * step; tick <= xMax; tick += step) {
+    tick = Math.round(tick * 1000) / 1000;
+    var tx = xScale(tick);
+    if (tx < marginLeft - 5 || tx > marginLeft + plotW + 5) continue;
+    lines.push('<line x1="' + tx + '" y1="' + axisY + '" x2="' + tx + '" y2="' + (axisY + 5) + '" stroke="' + gridColor + '"/>');
+    lines.push('<text x="' + tx + '" y="' + (axisY + 18) + '" text-anchor="middle" font-size="10" fill="' + textColor + '">' + tick.toFixed(1) + '</text>');
+    // Grid line
+    lines.push('<line x1="' + tx + '" y1="' + marginTop + '" x2="' + tx + '" y2="' + axisY + '" stroke="' + gridColor + '" stroke-width="0.5" opacity="0.4"/>');
+  }
+  lines.push('<text x="' + (marginLeft + plotW / 2) + '" y="' + (plotH - 8) + '" text-anchor="middle" font-size="11" fill="' + textColor + '">RMST Difference (months)</text>');
+
+  // Favours labels
+  if (x0 >= marginLeft && x0 <= marginLeft + plotW) {
+    lines.push('<text x="' + (x0 - 10) + '" y="' + (axisY + 30) + '" text-anchor="end" font-size="9" fill="' + nullColor + '">Favours Control</text>');
+    lines.push('<text x="' + (x0 + 10) + '" y="' + (axisY + 30) + '" text-anchor="start" font-size="9" fill="' + nullColor + '">Favours Treatment</text>');
+  }
+
+  // Study rows
+  var sumW = meta.weights.reduce(function(a, b) { return a + b; }, 0);
+  for (var i = 0; i < k; i++) {
+    var s = studies[i];
+    var y = marginTop + (i + 0.5) * rowH;
+    var lo = s.diff - z975 * s.seDiff;
+    var hi = s.diff + z975 * s.seDiff;
+    var wPct = (meta.weights[i] / sumW * 100);
+    var sqSize = Math.max(4, Math.min(14, 4 + wPct * 0.5));
+
+    // Study name
+    lines.push('<text x="' + (marginLeft - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="11" fill="' + textColor + '">' + escapeHtml(s.name) + '</text>');
+
+    // CI line
+    var xLo = Math.max(marginLeft, xScale(lo));
+    var xHi = Math.min(marginLeft + plotW, xScale(hi));
+    lines.push('<line x1="' + xLo + '" y1="' + y + '" x2="' + xHi + '" y2="' + y + '" stroke="' + textColor + '" stroke-width="1.5"/>');
+
+    // Square
+    var xPt = xScale(s.diff);
+    if (xPt >= marginLeft && xPt <= marginLeft + plotW) {
+      lines.push('<rect x="' + (xPt - sqSize / 2) + '" y="' + (y - sqSize / 2) + '" width="' + sqSize + '" height="' + sqSize + '" fill="' + accentColor + '"/>');
+    }
+
+    // Estimate + CI text on right
+    var ciText = s.diff.toFixed(2) + ' [' + lo.toFixed(2) + ', ' + hi.toFixed(2) + ']';
+    lines.push('<text x="' + (marginLeft + plotW + 8) + '" y="' + (y + 4) + '" font-size="10" fill="' + textColor + '">' + escapeHtml(ciText) + '</text>');
+
+    // Weight
+    lines.push('<text x="' + (totalW - 5) + '" y="' + (y + 4) + '" text-anchor="end" font-size="9" fill="' + nullColor + '">' + wPct.toFixed(1) + '%</text>');
+  }
+
+  // Weight header
+  lines.push('<text x="' + (totalW - 5) + '" y="' + (marginTop - 5) + '" text-anchor="end" font-size="9" font-weight="600" fill="' + nullColor + '">Weight</text>');
+
+  // Pooled diamonds
+  var diaY = marginTop + k * rowH + diamondH / 2 + 4;
+  var diaHalf = diamondH / 2 - 2;
+
+  // REML diamond (primary, solid)
+  var diaXC = xScale(meta.est);
+  var diaXL = xScale(meta.ci[0]);
+  var diaXR = xScale(meta.ci[1]);
+  var remlStroke = meta.converged === false ? ' stroke="' + accentColor + '" stroke-width="2" stroke-dasharray="4,2"' : '';
+  lines.push('<polygon points="' + diaXL + ',' + diaY + ' ' + diaXC + ',' + (diaY - diaHalf) + ' ' + diaXR + ',' + diaY + ' ' + diaXC + ',' + (diaY + diaHalf) + '" fill="' + accentColor + '" opacity="0.8"' + remlStroke + '/>');
+
+  // DL diamond (comparison, outline only) — slightly below
+  if (meta.dl) {
+    var dlY = diaY + diamondH - 2;
+    var dlXC = xScale(meta.dl.est);
+    var dlXL = xScale(meta.dl.ci[0]);
+    var dlXR = xScale(meta.dl.ci[1]);
+    lines.push('<polygon points="' + dlXL + ',' + dlY + ' ' + dlXC + ',' + (dlY - diaHalf + 2) + ' ' + dlXR + ',' + dlY + ' ' + dlXC + ',' + (dlY + diaHalf - 2) + '" fill="none" stroke="' + accentColor + '" stroke-width="1.5" opacity="0.5"/>');
+  }
+
+  // REML label
+  lines.push('<text x="' + (marginLeft - 8) + '" y="' + (diaY + 4) + '" text-anchor="end" font-size="11" font-weight="700" fill="' + textColor + '">RE (REML)</text>');
+  var poolCI = meta.est.toFixed(2) + ' [' + meta.ci[0].toFixed(2) + ', ' + meta.ci[1].toFixed(2) + ']';
+  lines.push('<text x="' + (marginLeft + plotW + 8) + '" y="' + (diaY + 4) + '" font-size="10" font-weight="600" fill="' + textColor + '">' + escapeHtml(poolCI) + '</text>');
+
+  // DL label
+  if (meta.dl) {
+    var dlY2 = diaY + diamondH - 2;
+    lines.push('<text x="' + (marginLeft - 8) + '" y="' + (dlY2 + 4) + '" text-anchor="end" font-size="10" fill="' + nullColor + '">RE (DL)</text>');
+    var dlCI = meta.dl.est.toFixed(2) + ' [' + meta.dl.ci[0].toFixed(2) + ', ' + meta.dl.ci[1].toFixed(2) + ']';
+    lines.push('<text x="' + (marginLeft + plotW + 8) + '" y="' + (dlY2 + 4) + '" font-size="9" fill="' + nullColor + '">' + escapeHtml(dlCI) + '</text>');
+  }
+
+  // Heterogeneity annotation below both diamonds
+  var hetTextY = meta.dl ? diaY + diamondH + 18 : diaY + 22;
+  var hetText = 'I\u00B2 = ' + meta.I2.toFixed(1) + '%, \u03C4\u00B2(REML) = ' + meta.tau2.toFixed(4) + ', Q = ' + meta.Q.toFixed(2) + ' (p = ' + meta.pQ.toFixed(3) + ')';
+  lines.push('<text x="' + marginLeft + '" y="' + hetTextY + '" font-size="10" fill="' + nullColor + '">' + escapeHtml(hetText) + '</text>');
+
+  lines.push('</svg>');
+  container.innerHTML = lines.join('\n');
+}
+
+function niceStep(min, max, targetTicks) {
+  var range = max - min;
+  var rough = range / targetTicks;
+  var mag = Math.pow(10, Math.floor(Math.log10(rough)));
+  var norm = rough / mag;
+  var step;
+  if (norm < 1.5) step = 1;
+  else if (norm < 3) step = 2;
+  else if (norm < 7) step = 5;
+  else step = 10;
+  return step * mag;
+}
+
+/* ============================================================
+   Funnel Plot (SVG)
+   ============================================================ */
+function drawFunnelPlot(meta) {
+  var container = document.getElementById('funnelContainer');
+  var studies = meta.studies;
+
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  var textColor = isDark ? '#e2e8f0' : '#1a1a2e';
+  var gridColor = isDark ? '#334155' : '#dee2e6';
+  var accentColor = isDark ? '#60a5fa' : '#2563eb';
+  var bgColor = isDark ? '#1e293b' : '#ffffff';
+  var funnelFill = isDark ? 'rgba(96,165,250,0.1)' : 'rgba(37,99,235,0.08)';
+
+  var W = 600, H = 400;
+  var ml = 70, mr = 30, mt = 30, mb = 50;
+  var pW = W - ml - mr, pH = H - mt - mb;
+
+  var maxSE = 0;
+  studies.forEach(function(s) { if (s.seDiff > maxSE) maxSE = s.seDiff; });
+  maxSE *= 1.3;
+  if (maxSE === 0) maxSE = 1;
+
+  var allDiffs = studies.map(function(s) { return s.diff; });
+  var dMin = Math.min.apply(null, allDiffs);
+  var dMax = Math.max.apply(null, allDiffs);
+  var dPad = Math.max((dMax - dMin) * 0.3, maxSE * 2);
+  var xMin = Math.min(dMin - dPad, meta.est - 1.96 * maxSE);
+  var xMax = Math.max(dMax + dPad, meta.est + 1.96 * maxSE);
+
+  function xS(v) { return ml + (v - xMin) / (xMax - xMin) * pW; }
+  function yS(se) { return mt + (se / maxSE) * pH; } // se=0 at top
+
+  var lines = [];
+  lines.push('<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" role="img" aria-label="Funnel plot">');
+  lines.push('<rect width="' + W + '" height="' + H + '" fill="' + bgColor + '"/>');
+
+  // Funnel: triangle from (est, 0) widening to +/-1.96*maxSE at bottom
+  var fL = xS(meta.est - 1.96 * maxSE);
+  var fR = xS(meta.est + 1.96 * maxSE);
+  var fTop = yS(0);
+  var fBot = yS(maxSE);
+  lines.push('<polygon points="' + xS(meta.est) + ',' + fTop + ' ' + fL + ',' + fBot + ' ' + fR + ',' + fBot + '" fill="' + funnelFill + '" stroke="' + gridColor + '" stroke-width="1" stroke-dasharray="4,3"/>');
+
+  // Vertical line at pooled estimate
+  lines.push('<line x1="' + xS(meta.est) + '" y1="' + mt + '" x2="' + xS(meta.est) + '" y2="' + (mt + pH) + '" stroke="' + accentColor + '" stroke-width="1" stroke-dasharray="3,3"/>');
+
+  // Axes
+  lines.push('<line x1="' + ml + '" y1="' + mt + '" x2="' + ml + '" y2="' + (mt + pH) + '" stroke="' + gridColor + '"/>');
+  lines.push('<line x1="' + ml + '" y1="' + (mt + pH) + '" x2="' + (ml + pW) + '" y2="' + (mt + pH) + '" stroke="' + gridColor + '"/>');
+
+  // X ticks
+  var xStep = niceStep(xMin, xMax, 6);
+  for (var xt = Math.ceil(xMin / xStep) * xStep; xt <= xMax; xt += xStep) {
+    xt = Math.round(xt * 1000) / 1000;
+    var xx = xS(xt);
+    if (xx < ml - 5 || xx > ml + pW + 5) continue;
+    lines.push('<line x1="' + xx + '" y1="' + (mt + pH) + '" x2="' + xx + '" y2="' + (mt + pH + 4) + '" stroke="' + gridColor + '"/>');
+    lines.push('<text x="' + xx + '" y="' + (mt + pH + 16) + '" text-anchor="middle" font-size="10" fill="' + textColor + '">' + xt.toFixed(1) + '</text>');
+  }
+  lines.push('<text x="' + (ml + pW / 2) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="11" fill="' + textColor + '">RMST Difference (months)</text>');
+
+  // Y ticks (SE, inverted: 0 at top)
+  var yStep = niceStep(0, maxSE, 5);
+  for (var yt = 0; yt <= maxSE; yt += yStep) {
+    var yy = yS(yt);
+    lines.push('<line x1="' + (ml - 4) + '" y1="' + yy + '" x2="' + ml + '" y2="' + yy + '" stroke="' + gridColor + '"/>');
+    lines.push('<text x="' + (ml - 8) + '" y="' + (yy + 3) + '" text-anchor="end" font-size="10" fill="' + textColor + '">' + yt.toFixed(2) + '</text>');
+  }
+  lines.push('<text x="15" y="' + (mt + pH / 2) + '" text-anchor="middle" font-size="11" fill="' + textColor + '" transform="rotate(-90,15,' + (mt + pH / 2) + ')">Standard Error</text>');
+
+  // Points
+  studies.forEach(function(s) {
+    var cx = xS(s.diff);
+    var cy = yS(s.seDiff);
+    lines.push('<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + accentColor + '" stroke="' + bgColor + '" stroke-width="1"/>');
+  });
+
+  // Egger's regression line (if available)
+  if (meta.egger) {
+    var eg = meta.egger;
+    // In funnel coordinates: yi = eg.intercept * sei + eg.slope
+    // At se=0: yi = eg.slope; at se=maxSE: yi = eg.intercept * maxSE + eg.slope
+    var lineY0 = eg.slope;
+    var lineYMax = eg.intercept * maxSE + eg.slope;
+    var lx1 = xS(lineY0), ly1 = yS(0);
+    var lx2 = xS(lineYMax), ly2 = yS(maxSE);
+    // Parametric clip to plot area [ml, ml+pW] x [mt, mt+pH]
+    var ox1 = lx1, oy1 = ly1, ox2 = lx2, oy2 = ly2;
+    var dx = ox2 - ox1, dy = oy2 - oy1;
+    var t0 = 0, t1 = 1;
+    function clipEdge(p, q) {
+      if (Math.abs(p) < 1e-10) return q >= 0;
+      var r = q / p;
+      if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; }
+      else { if (r < t0) return false; if (r < t1) t1 = r; }
+      return true;
+    }
+    var visible = clipEdge(-dx, ox1 - ml) && clipEdge(dx, ml + pW - ox1) && clipEdge(-dy, oy1 - mt) && clipEdge(dy, mt + pH - oy1);
+    if (visible) {
+      lx1 = ox1 + t0 * dx; ly1 = oy1 + t0 * dy;
+      lx2 = ox1 + t1 * dx; ly2 = oy1 + t1 * dy;
+      lines.push('<line x1="' + lx1 + '" y1="' + ly1 + '" x2="' + lx2 + '" y2="' + ly2 + '" stroke="' + (isDark ? '#f87171' : '#dc3545') + '" stroke-width="1.5" stroke-dasharray="5,3"/>');
+      lines.push('<text x="' + (ml + pW - 5) + '" y="' + (mt + 14) + '" text-anchor="end" font-size="9" fill="' + (isDark ? '#f87171' : '#dc3545') + '">Egger regression</text>');
+    }
+  }
+
+  lines.push('</svg>');
+  container.innerHTML = lines.join('\n');
+}
+
+/* ============================================================
+   Render Analysis Tab
+   ============================================================ */
+function renderAnalysis(meta) {
+  document.getElementById('analysisEmpty').style.display = 'none';
+  document.getElementById('analysisContent').style.display = '';
+
+  var z975 = normalQuantile(0.975);
+  var pValue = 2 * (1 - normalCDF(Math.abs(meta.est / meta.se)));
+
+  // Pooled
+  document.getElementById('pooledStats').innerHTML =
+    statBox('Pooled RMST Diff (REML)', meta.est.toFixed(3) + ' months') +
+    statBox('95% CI', '[' + meta.ci[0].toFixed(3) + ', ' + meta.ci[1].toFixed(3) + ']') +
+    statBox('SE', meta.se.toFixed(4)) +
+    statBox('z', (meta.est / meta.se).toFixed(3)) +
+    statBox('p-value', pValue < 0.001 ? '<0.001' : pValue.toFixed(4));
+
+  // Heterogeneity
+  document.getElementById('hetStats').innerHTML =
+    statBox('I\u00B2', meta.I2.toFixed(1) + '%') +
+    statBox('\u03C4\u00B2', meta.tau2.toFixed(4)) +
+    statBox('\u03C4', Math.sqrt(meta.tau2).toFixed(4)) +
+    statBox('Q (' + (meta.k - 1) + ' df)', meta.Q.toFixed(2)) +
+    statBox('p (Q)', meta.pQ < 0.001 ? '<0.001' : meta.pQ.toFixed(4));
+
+  // Estimator Comparison card
+  var dl = meta.dl;
+  document.getElementById('compareCard').style.display = '';
+  var maxTau2 = Math.max(dl.tau2, meta.tau2);
+  var diffPct = maxTau2 > 0 ? Math.abs(meta.tau2 - dl.tau2) / maxTau2 * 100 : 0;
+  var hlClass = (meta.k > 2 && diffPct > 5) ? ' class="highlight"' : '';
+  var compareHtml = '<table class="compare-table">' +
+    '<thead><tr><th></th><th>DerSimonian-Laird</th><th>REML</th></tr></thead><tbody>' +
+    '<tr><td class="row-label">Pooled RMST Diff</td><td>' + dl.est.toFixed(4) + '</td><td>' + meta.est.toFixed(4) + '</td></tr>' +
+    '<tr><td class="row-label">95% CI</td><td>[' + dl.ci[0].toFixed(4) + ', ' + dl.ci[1].toFixed(4) + ']</td><td>[' + meta.ci[0].toFixed(4) + ', ' + meta.ci[1].toFixed(4) + ']</td></tr>' +
+    '<tr><td class="row-label">SE</td><td>' + dl.se.toFixed(5) + '</td><td>' + meta.se.toFixed(5) + '</td></tr>' +
+    '<tr' + hlClass + '><td class="row-label">\u03C4\u00B2</td><td>' + dl.tau2.toFixed(5) + '</td><td>' + meta.tau2.toFixed(5) + '</td></tr>' +
+    '<tr><td class="row-label">I\u00B2</td><td>' + dl.I2.toFixed(1) + '%</td><td>' + meta.I2.toFixed(1) + '%</td></tr>';
+  if (dl.hksj && meta.hksj) {
+    compareHtml += '<tr><td class="row-label">HKSJ CI</td><td>[' + dl.hksj.ci[0].toFixed(4) + ', ' + dl.hksj.ci[1].toFixed(4) + ']</td><td>[' + meta.hksj.ci[0].toFixed(4) + ', ' + meta.hksj.ci[1].toFixed(4) + ']</td></tr>';
+  }
+  if (dl.pi && meta.pi) {
+    compareHtml += '<tr><td class="row-label">95% PI</td><td>[' + dl.pi[0].toFixed(4) + ', ' + dl.pi[1].toFixed(4) + ']</td><td>[' + meta.pi[0].toFixed(4) + ', ' + meta.pi[1].toFixed(4) + ']</td></tr>';
+  }
+  compareHtml += '</tbody></table>';
+  if (!meta.converged) {
+    compareHtml += '<p class="mt-1"><span class="warning-badge">Warning</span> REML did not converge within ' + meta.iterations + ' iterations; results are approximate.</p>';
+  }
+  if (meta.k === 2) {
+    compareHtml += '<p class="text-sm text-muted mt-1">Note: With only 2 studies, \u03C4\u00B2 estimates are unreliable.</p>';
+  }
+  document.getElementById('compareResult').innerHTML = compareHtml;
+
+  // HKSJ
+  if (meta.hksj) {
+    document.getElementById('hksjCard').style.display = '';
+    document.getElementById('hksjResult').innerHTML =
+      '<p class="text-sm">HKSJ pooled RMST difference: <strong>' + meta.hksj.est.toFixed(3) +
+      '</strong> (95% CI: ' + meta.hksj.ci[0].toFixed(3) + ' to ' + meta.hksj.ci[1].toFixed(3) +
+      '), SE = ' + meta.hksj.se.toFixed(4) + '</p>' +
+      '<p class="text-sm text-muted mt-1">REML CI width: ' + (meta.ci[1] - meta.ci[0]).toFixed(3) +
+      ' | HKSJ CI width: ' + (meta.hksj.ci[1] - meta.hksj.ci[0]).toFixed(3) + '</p>';
+  } else {
+    document.getElementById('hksjCard').style.display = 'none';
+  }
+
+  // Prediction interval
+  if (meta.pi) {
+    document.getElementById('piCard').style.display = '';
+    document.getElementById('piResult').innerHTML =
+      '<p class="text-sm">95% Prediction Interval: <strong>' + meta.pi[0].toFixed(3) +
+      ' to ' + meta.pi[1].toFixed(3) + '</strong> months</p>' +
+      '<p class="text-sm text-muted mt-1">Interpretation: The true RMST difference in a new study would be expected to fall in this range 95% of the time.</p>';
+  } else {
+    document.getElementById('piCard').style.display = 'none';
+  }
+
+  // LOO
+  var looBody = document.getElementById('looBody');
+  looBody.innerHTML = '';
+  meta.loo.forEach(function(r) {
+    looBody.innerHTML += '<tr><td>' + escapeHtml(r.omitted) + '</td><td>' + r.est.toFixed(3) +
+      '</td><td>[' + r.ci[0].toFixed(3) + ', ' + r.ci[1].toFixed(3) + ']</td><td>' + r.I2.toFixed(1) + '%</td></tr>';
+  });
+
+  // Tau sensitivity
+  var tauSens = meta.tauSens;
+  if (tauSens) {
+    document.getElementById('tauSensCard').style.display = '';
+    var html = '<table><thead><tr><th>Tau (months)</th><th>k</th><th>Pooled RMST Diff</th><th>95% CI</th></tr></thead><tbody>';
+    tauSens.forEach(function(r) {
+      html += '<tr><td>' + r.tau + '</td><td>' + r.k + '</td><td>' + r.est.toFixed(3) + '</td><td>[' + r.ci[0].toFixed(3) + ', ' + r.ci[1].toFixed(3) + ']</td></tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('tauSensResult').innerHTML = html;
+  } else {
+    document.getElementById('tauSensCard').style.display = 'none';
+  }
+
+  // Funnel
+  drawFunnelPlot(meta);
+
+  // Egger's test card
+  if (meta.egger) {
+    document.getElementById('eggerCard').style.display = '';
+    var eg = meta.egger;
+    var egInterp = eg.pValue < 0.10
+      ? 'Evidence of funnel plot asymmetry (consider publication bias).'
+      : 'No evidence of funnel plot asymmetry.';
+    var egHtml = '<div class="stat-grid">' +
+      statBox('Intercept', eg.intercept.toFixed(3)) +
+      statBox('SE', eg.interceptSE.toFixed(3)) +
+      statBox('t', eg.t.toFixed(3)) +
+      statBox('df', eg.df) +
+      statBox('p-value', eg.pValue < 0.001 ? '<0.001' : eg.pValue.toFixed(4)) +
+      '</div>' +
+      '<p class="text-sm mt-1"><strong>' + egInterp + '</strong></p>' +
+      '<p class="text-sm text-muted mt-1">Egger\'s test has low power with fewer than 10 studies.</p>';
+    document.getElementById('eggerResult').innerHTML = egHtml;
+  } else {
+    document.getElementById('eggerCard').style.display = 'none';
+  }
+
+  // Show export buttons
+  document.getElementById('forestExportBtns').style.display = '';
+  document.getElementById('funnelExportBtns').style.display = '';
+}
+
+function statBox(label, value) {
+  return '<div class="stat-box"><div class="stat-value">' + escapeHtml(String(value)) + '</div><div class="stat-label">' + escapeHtml(label) + '</div></div>';
+}
+
+/* ============================================================
+   Render Report Tab
+   ============================================================ */
+function renderReport(meta) {
+  document.getElementById('reportEmpty').style.display = 'none';
+  document.getElementById('reportContent').style.display = '';
+
+  var pValue = 2 * (1 - normalCDF(Math.abs(meta.est / meta.se)));
+  var pStr = pValue < 0.001 ? 'p < 0.001' : 'p = ' + pValue.toFixed(4);
+
+  // Methods text
+  var methods = '<p>Restricted mean survival time (RMST) differences were pooled using ' +
+    'random-effects meta-analysis with both DerSimonian-Laird (DL) and restricted maximum ' +
+    'likelihood (REML) estimators for between-study variance (\u03C4\u00B2). The RMST difference ' +
+    'for each study was calculated as RMST<sub>experimental</sub> &minus; RMST<sub>control</sub>, ' +
+    'with the standard error of the difference computed as SE<sub>diff</sub> = ' +
+    '&radic;(SE<sub>exp</sub><sup>2</sup> + SE<sub>ctrl</sub><sup>2</sup>). ' +
+    'Heterogeneity was assessed using the Q statistic and I<sup>2</sup>. A Hartung-Knapp-Sidik-Jonkman ' +
+    '(HKSJ) adjustment was applied for the confidence interval; the HKSJ variance was floored at the ' +
+    'standard random-effects variance to prevent narrower intervals (R&ouml;ver et al., 2015). ' +
+    'A 95% prediction interval was ' +
+    'calculated (k &ge; 3). Leave-one-out sensitivity analysis was performed. ' +
+    'Funnel plot asymmetry was assessed using Egger\'s regression test. ' +
+    'Unlike the hazard ratio, the RMST difference does not assume proportional hazards and is ' +
+    'directly interpretable as the difference in mean event-free survival time up to the ' +
+    'specified time horizon.</p>';
+  if (meta.converged === false) {
+    methods += '<p class="text-sm"><strong>Note:</strong> REML did not converge within ' +
+      meta.iterations + ' iterations; DerSimonian-Laird results may be preferred.</p>';
+  }
+  document.getElementById('methodsText').innerHTML = methods;
+
+  // Results table
+  var tbl = '<table><thead><tr><th>Study</th><th>RMST Diff</th><th>SE</th><th>95% CI</th><th>Weight (%)</th></tr></thead><tbody>';
+  var z975 = normalQuantile(0.975);
+  var sumW = meta.weights.reduce(function(a, b) { return a + b; }, 0);
+  meta.studies.forEach(function(s, i) {
+    var lo = s.diff - z975 * s.seDiff;
+    var hi = s.diff + z975 * s.seDiff;
+    tbl += '<tr><td>' + escapeHtml(s.name) + '</td><td>' + s.diff.toFixed(3) + '</td><td>' + s.seDiff.toFixed(3) +
+      '</td><td>[' + lo.toFixed(3) + ', ' + hi.toFixed(3) + ']</td><td>' + (meta.weights[i] / sumW * 100).toFixed(1) + '</td></tr>';
+  });
+  tbl += '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>RE Pooled (REML)</td><td>' + meta.est.toFixed(3) +
+    '</td><td>' + meta.se.toFixed(3) + '</td><td>[' + meta.ci[0].toFixed(3) + ', ' + meta.ci[1].toFixed(3) + ']</td><td>100.0</td></tr>';
+  tbl += '</tbody></table>';
+  tbl += '<p class="text-sm text-muted mt-1">Heterogeneity: I<sup>2</sup> = ' + meta.I2.toFixed(1) + '%, ' +
+    '\u03C4<sup>2</sup> = ' + meta.tau2.toFixed(4) + ', Q(' + (meta.k - 1) + ') = ' + meta.Q.toFixed(2) + ', ' + pStr + '</p>';
+  if (meta.hksj) {
+    tbl += '<p class="text-sm text-muted">HKSJ 95% CI: [' + meta.hksj.ci[0].toFixed(3) + ', ' + meta.hksj.ci[1].toFixed(3) + ']</p>';
+  }
+  if (meta.pi) {
+    tbl += '<p class="text-sm text-muted">95% Prediction interval: [' + meta.pi[0].toFixed(3) + ', ' + meta.pi[1].toFixed(3) + ']</p>';
+  }
+  if (meta.egger) {
+    var eg = meta.egger;
+    tbl += '<p class="text-sm text-muted">Egger\'s test: intercept = ' + eg.intercept.toFixed(3) +
+      ', t(' + eg.df + ') = ' + eg.t.toFixed(3) + ', p = ' +
+      (eg.pValue < 0.001 ? '<0.001' : eg.pValue.toFixed(4)) + '</p>';
+  }
+  document.getElementById('resultsTableWrap').innerHTML = tbl;
+
+  // R code
+  var rLines = [];
+  rLines.push('# RMST Meta-Analysis in R');
+  rLines.push('# Equivalent to metafor / meta package approach');
+  rLines.push('library(meta)');
+  rLines.push('library(metafor)');
+  rLines.push('');
+  rLines.push('# Study data');
+  rLines.push('study <- c(' + meta.studies.map(function(s) { return '"' + s.name.replace(/"/g, '\\"') + '"'; }).join(', ') + ')');
+  rLines.push('rmst_diff <- c(' + meta.studies.map(function(s) { return s.diff.toFixed(4); }).join(', ') + ')');
+  rLines.push('se_diff <- c(' + meta.studies.map(function(s) { return s.seDiff.toFixed(4); }).join(', ') + ')');
+  rLines.push('');
+  rLines.push('# REML random-effects meta-analysis (primary)');
+  rLines.push('m <- metagen(TE = rmst_diff,');
+  rLines.push('             seTE = se_diff,');
+  rLines.push('             studlab = study,');
+  rLines.push('             sm = "MD",');
+  rLines.push('             method.tau = "REML",');
+  rLines.push('             hakn = TRUE,  # HKSJ adjustment');
+  rLines.push('             prediction = TRUE,');
+  rLines.push('             title = "RMST Difference Meta-Analysis (REML)")');
+  rLines.push('');
+  rLines.push('# DL comparison');
+  rLines.push('m_dl <- update(m, method.tau = "DL")');
+  rLines.push('');
+  rLines.push('# Results');
+  rLines.push('summary(m)');
+  rLines.push('forest(m, xlab = "RMST Difference (months)",');
+  rLines.push('       label.left = "Favours Control",');
+  rLines.push('       label.right = "Favours Treatment")');
+  rLines.push('funnel(m)');
+  rLines.push('');
+  rLines.push("# Egger's regression test for funnel plot asymmetry");
+  rLines.push('regtest(rma(yi = rmst_diff, sei = se_diff, method = "REML"), model = "lm")');
+  rLines.push('');
+  rLines.push('# Leave-one-out sensitivity');
+  rLines.push('metainf(m, pooled = "random")');
+
+  document.getElementById('rCode').textContent = rLines.join('\n');
+}
+
+/* ---------- Copy buttons ---------- */
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-copy]');
+  if (!btn) return;
+  var targetId = btn.getAttribute('data-copy');
+  var el = document.getElementById(targetId);
+  if (!el) return;
+  var text = el.innerText || el.textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    var fb = document.getElementById('fb-' + targetId);
+    if (fb) {
+      fb.classList.add('show');
+      setTimeout(function() { fb.classList.remove('show'); }, 1500);
+    }
+  });
+});
+
+/* ---------- SVG / PNG Export ---------- */
+// Safety: exported SVGs are self-generated, never contain <script> or external refs
+function exportSVG(containerId, filename) {
+  var container = document.getElementById(containerId);
+  var svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+  var svgData = new XMLSerializer().serializeToString(svgEl);
+  // Ensure xmlns
+  if (svgData.indexOf('xmlns=') === -1) {
+    svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  var blob = new Blob(['<?xml version="1.0" encoding="UTF-8"?>\n' + svgData], { type: 'image/svg+xml;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportPNG(containerId, filename) {
+  var container = document.getElementById(containerId);
+  var svgEl = container.querySelector('svg');
+  if (!svgEl) return;
+  var svgData = new XMLSerializer().serializeToString(svgEl);
+  if (svgData.indexOf('xmlns=') === -1) {
+    svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+  }
+  var svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+  var svgUrl = URL.createObjectURL(svgBlob);
+  var img = new Image();
+  img.onload = function() {
+    var scale = 2; // retina
+    var canvas = document.createElement('canvas');
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    var ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(svgUrl);
+    canvas.toBlob(function(blob) {
+      if (!blob) {
+        alert('PNG export failed \u2014 try SVG instead.');
+        return;
+      }
+      var pngUrl = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = pngUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(pngUrl);
+    }, 'image/png');
+  };
+  img.onerror = function() {
+    URL.revokeObjectURL(svgUrl);
+    alert('PNG export failed \u2014 try SVG instead.');
+  };
+  img.src = svgUrl;
+}
+
+// Export button click handler
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('[data-export]');
+  if (!btn) return;
+  var chart = btn.getAttribute('data-export');
+  var format = btn.getAttribute('data-format');
+  var containerId = chart === 'forest' ? 'forestContainer' : 'funnelContainer';
+  var filename = 'rmst-' + chart + '-plot.' + format;
+  if (format === 'svg') exportSVG(containerId, filename);
+  else if (format === 'png') exportPNG(containerId, filename);
+});
+
+/* ---------- Init with 3 empty rows ---------- */
+addStudyRow();
+addStudyRow();
+addStudyRow();
+</script>
+</body>
+</html>

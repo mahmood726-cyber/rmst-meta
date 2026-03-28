@@ -1,0 +1,58 @@
+{
+  "title": "RMST Meta: A Browser Tool for Meta-Analysis of Restricted Mean Survival Time Beyond the Hazard Ratio",
+  "slug": "rmst-meta-beyond-hazard-ratio",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "path": "C:\\RMSTmeta",
+  "type": "methods",
+  "primary_estimand": "Pooled RMST difference (months)",
+  "certainty": "moderate",
+  "summary": "RMST Meta pools restricted mean survival time differences across trials in the browser, finding immunotherapy extended mean survival by 2.59 months (95% CI 1.94-3.23) in five NSCLC PD-1 inhibitor trials.",
+  "body": "Can restricted mean survival time differences be pooled across trials in a browser-based meta-analysis tool that avoids the proportional hazards assumption inherently required by standard hazard ratio synthesis? The tool was applied to five landmark PD-1 inhibitor trials for advanced non-small-cell lung cancer totaling over 5000 participants at a 24-month horizon. DerSimonian-Laird random-effects pooling with optional Hartung-Knapp-Sidik-Jonkman adjustment and prediction intervals was implemented in 1224 lines of dependency-free JavaScript. The pooled RMST mean difference was 2.59 months favoring immunotherapy (95% CI 1.94 to 3.23), directly interpretable as additional survival time gained per patient. Leave-one-out sensitivity analysis and funnel plot inspection confirmed stability, with no single trial altering the conclusion and no evidence of asymmetry. RMST meta-analysis provides a clinically intuitive absolute time-scale summary that complements the relative hazard ratio in settings where treatment benefit evolves over time. The tool is limited to pre-computed RMST differences and cannot reconstruct individual patient survival curves from published Kaplan-Meier figures.",
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can restricted mean survival time differences be pooled across trials in a browser-based meta-analysis tool that avoids the proportional hazards assumption inherently required by standard hazard ratio synthesis?"
+    },
+    {
+      "role": "Dataset",
+      "text": "The tool was applied to five landmark PD-1 inhibitor trials for advanced non-small-cell lung cancer totaling over 5000 participants at a 24-month horizon."
+    },
+    {
+      "role": "Method",
+      "text": "DerSimonian-Laird random-effects pooling with optional Hartung-Knapp-Sidik-Jonkman adjustment and prediction intervals was implemented in 1224 lines of dependency-free JavaScript."
+    },
+    {
+      "role": "Primary result",
+      "text": "The pooled RMST mean difference was 2.59 months favoring immunotherapy (95% CI 1.94 to 3.23), directly interpretable as additional survival time gained per patient."
+    },
+    {
+      "role": "Robustness",
+      "text": "Leave-one-out sensitivity analysis and funnel plot inspection confirmed stability, with no single trial altering the conclusion and no evidence of asymmetry."
+    },
+    {
+      "role": "Interpretation",
+      "text": "RMST meta-analysis provides a clinically intuitive absolute time-scale summary that complements the relative hazard ratio in settings where treatment benefit evolves over time."
+    },
+    {
+      "role": "Boundary",
+      "text": "The tool is limited to pre-computed RMST differences and cannot reconstruct individual patient survival curves from published Kaplan-Meier figures."
+    }
+  ],
+  "notes": {
+    "app": "RMST Meta v1.1",
+    "data": "5 PD-1 inhibitor NSCLC trials (CheckMate-017/057, KEYNOTE-010/024, OAK)",
+    "code": "https://github.com/mahmood726-cyber/rmst-meta",
+    "doi": "",
+    "version": "1.1",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "affiliation": "Tahir Heart Institute",
+  "email": "mahmood.ahmad2@nhs.net",
+  "references": [
+    "Guyot P, Ades AE, Ouwens MJ, Welton NJ. Enhanced secondary analysis of survival data: reconstructing the data from published Kaplan-Meier survival curves. BMC Med Res Methodol. 2012;12:9.",
+    "Tierney JF, Stewart LA, Ghersi D, Burdett S, Sydes MR. Practical methods for incorporating summary time-to-event data into meta-analysis. Trials. 2007;8:16.",
+    "Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. 2nd ed. Wiley; 2021."
+  ]
+}
