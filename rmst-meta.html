@@ -211,6 +211,7 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
   <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-report" id="tab-report" tabindex="-1">Report</button>
 </nav>
 
+<main>
 <!-- Tab 1: Data Input -->
 <div class="tab-panel active" role="tabpanel" id="panel-data" aria-labelledby="tab-data" tabindex="-1">
   <div class="card">
@@ -360,6 +361,8 @@ th { font-weight: 600; color: var(--text-muted); font-size: 0.8rem; text-transfo
     </div>
   </div>
 </div>
+
+</main>
 
 <footer style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:0.8rem;">
   RMST Meta v1.1 &mdash; Browser-based, no data leaves your device.
@@ -835,11 +838,11 @@ function remlMeta(diffs, ses) {
     var P = 0;
     for (var ip = 0; ip < k; ip++) P += wiStar[ip] * wiStar[ip] * (diffs[ip] - muStar) * (diffs[ip] - muStar);
 
-    // Score: dl/dtau2 = -0.5 * [sum(wi*) - sum(wi*^2)/sum(wi*) - P]
+    // REML score: proportional to (P - A) where A = tr(W) - tr(W^2)/tr(W)
     var A = sumW - sumW2 / sumW;
     var score = P - A;
 
-    // Fisher information: 0.5 * [sum(wi*^2) - 2*sum(wi*^3)/sum(wi*) + (sum(wi*^2)/sum(wi*))^2]
+    // Fisher information (expected): sum(wi*^2) - 2*sum(wi*^3)/sum(wi*) + (sum(wi*^2)/sum(wi*))^2
     var info = sumW2 - 2 * sumW3 / sumW + (sumW2 / sumW) * (sumW2 / sumW);
 
     if (info <= 0) break; // degenerate, stop
@@ -1176,7 +1179,7 @@ function drawForestPlot(meta) {
     // Square
     var xPt = xScale(s.diff);
     if (xPt >= marginLeft && xPt <= marginLeft + plotW) {
-      lines.push('<rect x="' + (xPt - sqSize / 2) + '" y="' + (y - sqSize / 2) + '" width="' + sqSize + '" height="' + sqSize + '" fill="' + accentColor + '"/>');
+      lines.push('<rect x="' + (xPt - sqSize / 2) + '" y="' + (y - sqSize / 2) + '" width="' + sqSize + '" height="' + sqSize + '" fill="' + accentColor + '"><title>' + escapeHtml(s.name) + ': ' + s.diff.toFixed(2) + ' (weight ' + wPct.toFixed(1) + '%)</title></rect>');
     }
 
     // Estimate + CI text on right
