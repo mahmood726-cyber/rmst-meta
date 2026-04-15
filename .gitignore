@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Session output (Sentinel)
+STUCK_FAILURES.md
+PROGRESS.md
