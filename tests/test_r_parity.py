@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import math
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -26,7 +27,7 @@ except ImportError:
     student_t = None
     norm = None
 
-RSCRIPT = r"C:\Program Files\R\R-4.5.2\bin\Rscript.exe"
+RSCRIPT = os.environ.get("RSCRIPT") or shutil.which("Rscript") or shutil.which("Rscript.exe")
 HERE = Path(__file__).resolve().parent
 R_DIR = HERE.parent / "validation" / "r_parity"
 R_SCRIPT = R_DIR / "validate.R"
@@ -40,8 +41,8 @@ TOL_REML_TAU2 = 1e-3  # REML tau² wobblier under iterative optimisation
 
 
 pytestmark = pytest.mark.skipif(
-    not os.path.exists(RSCRIPT) or minimize_scalar is None,
-    reason="R 4.5.2 or scipy not available",
+    not RSCRIPT or minimize_scalar is None,
+    reason="Rscript or scipy not available",
 )
 
 

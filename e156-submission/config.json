@@ -3,7 +3,7 @@
   "slug": "rmst-meta-beyond-hazard-ratio",
   "author": "Mahmood Ahmad",
   "date": "2026-03-26",
-  "path": "C:\\RMSTmeta",
+  "path": "..",
   "type": "methods",
   "primary_estimand": "Pooled RMST difference (months)",
   "certainty": "moderate",
