@@ -19,7 +19,8 @@ import pytest
 
 try:
     from scipy.optimize import minimize_scalar
-    from scipy.stats import t as student_t, norm
+    from scipy.stats import norm
+    from scipy.stats import t as student_t
 except ImportError:
     minimize_scalar = None
     student_t = None
