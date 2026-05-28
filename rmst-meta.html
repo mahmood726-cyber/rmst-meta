@@ -1561,7 +1561,7 @@ function renderReport(meta) {
   rLines.push('library(metafor)');
   rLines.push('');
   rLines.push('# Study data');
-  rLines.push('study <- c(' + meta.studies.map(function(s) { return '"' + s.name.replace(/"/g, '\\"') + '"'; }).join(', ') + ')');
+  rLines.push('study <- c(' + meta.studies.map(function(s) { return '"' + s.name.replace(/\/g, '\\').replace(/"/g, '\\"') + '"'; }).join(', ') + ')');
   rLines.push('rmst_diff <- c(' + meta.studies.map(function(s) { return s.diff.toFixed(4); }).join(', ') + ')');
   rLines.push('se_diff <- c(' + meta.studies.map(function(s) { return s.seDiff.toFixed(4); }).join(', ') + ')');
   rLines.push('');
