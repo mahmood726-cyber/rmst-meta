@@ -28,7 +28,7 @@ python -m http.server 8000
 
 ```bash
 python -m pytest -q          # Python smoke + parity tests
-Rscript validate.R           # numerical parity against R survRM2 (requires R on PATH)
+Rscript validate.R           # numerical parity against R metafor (requires R on PATH)
 ```
 
 If `Rscript` is not on `PATH`, set `RSCRIPT=/full/path/to/Rscript` before running the parity gate.
