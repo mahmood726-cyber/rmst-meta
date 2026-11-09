@@ -3,4 +3,4 @@
 # these for both lint and test jobs.
 
 pytest>=9.1.1
-scipy>=1.18.0
+scipy>=1.18.1
